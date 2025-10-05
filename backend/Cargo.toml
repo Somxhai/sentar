@@ -1,0 +1,20 @@
+[package]
+name = "backend"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = {version="0.8.6", features=["ws", "macros"]}
+axum-server = "0.7.2"
+dotenv = "0.15.0"
+sea-orm = "1.1.16"
+serde = "1.0.228"
+serde_json = "1.0.145"
+tracing = "0.1.41"
+tracing-subscriber = "0.3.20"
+uuid = "1.18.1"
+tokio = {version="1.47.1", features=["full"]}
+tokio-tungstenite="0.27.0"
+utoipa = "5.4.0"
+utoipa-swagger-ui = {version="9.0.2", features=["axum"]}
+utoipa-axum = "0.2.0"
