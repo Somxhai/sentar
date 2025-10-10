@@ -5,6 +5,8 @@ use tracing::error;
 use utoipa_axum::{router::OpenApiRouter, routes};
 use utoipa_swagger_ui::SwaggerUi;
 
+mod routes;
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt().init();
