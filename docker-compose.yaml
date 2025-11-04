@@ -1,16 +1,16 @@
 services:
-  db:
-    image: postgres:18
-    container_name: pg-docker
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
     environment:
-      POSTGRES_USER: admin 
-      POSTGRES_PASSWORD: postgres123 
-      POSTGRES_DB: main
+      DATABASE_URL: postgres://devuser:devpass@db:5432/devdb
+
+  db:
+    image: postgres:17
+    environment:
+      - .env
     ports:
       - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    restart: always
-
-volumes:
-  pgdata:
