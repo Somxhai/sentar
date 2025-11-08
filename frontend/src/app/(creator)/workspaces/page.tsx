@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic" // ให้ดึงสดเวลา d
 export default async function Page() {
   let workspaces: Workspace[] = []
   try {
-    workspaces = await api.getMyWorkspaces()
+    workspaces = await api.getMyWorkspaces() as Workspace[]
   } catch (e) {
     // เงียบ ๆ ไว้ก่อน แล้วโชว์ empty state ด้านล่าง
   }

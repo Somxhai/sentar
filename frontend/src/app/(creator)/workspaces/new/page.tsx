@@ -17,7 +17,7 @@ export default function NewWorkspacePage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await api.createWorkspace(name.trim())
+      const res = await api.createWorkspace(name.trim()) as { id: string }
       router.push(`/workspaces/${res.id}`)
     } catch (err: any) {
       setError(err?.message ?? "สร้างไม่สำเร็จ")
