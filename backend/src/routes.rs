@@ -1,1 +1,1 @@
-mod seat;
+pub mod workspace;
