@@ -3,24 +3,36 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(table_name = "workspace")]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[sea_orm(table_name = "reservation")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
-    pub name: String,
-    pub owner_id: String,
+    pub user_id: String,
+    pub event_id: Uuid,
+    pub status: String,
+    #[sea_orm(column_type = "Double")]
+    pub total_price: f64,
+    pub expires_at: Option<DateTimeWithTimeZone>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::event::Entity")]
+    #[sea_orm(
+        belongs_to = "super::event::Entity",
+        from = "Column::EventId",
+        to = "super::event::Column::Id",
+        on_update = "Cascade",
+        on_delete = "Cascade"
+    )]
     Event,
+    #[sea_orm(has_many = "super::reservation_item::Entity")]
+    ReservationItem,
     #[sea_orm(
         belongs_to = "super::user::Entity",
-        from = "Column::OwnerId",
+        from = "Column::UserId",
         to = "super::user::Column::Id",
         on_update = "Cascade",
         on_delete = "Cascade"
@@ -31,6 +43,12 @@ pub enum Relation {
 impl Related<super::event::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Event.def()
+    }
+}
+
+impl Related<super::reservation_item::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::ReservationItem.def()
     }
 }
 
