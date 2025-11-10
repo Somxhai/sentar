@@ -3,10 +3,10 @@ use std::{env, sync::Arc, time::Duration};
 use axum::Router;
 use eyre::Result;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
-use utoipa_axum::{router::OpenApiRouter, routes};
+use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::routes::workspace::workspace_routes;
+use crate::routes::workspace::{workspace_routes, workspaces::workspaces_routes};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -36,12 +36,13 @@ pub async fn create_database() -> Result<DatabaseConnection> {
     Ok(db)
 }
 
-pub async fn create_router() -> Result<Router> {
-    let app_state = AppState::new(Arc::new(create_database().await?));
+pub fn create_router(db: DatabaseConnection) -> Result<Router> {
+    let app_state = AppState::new(Arc::new(db));
 
     // Build router and OpenAPI spec
     let (router, api): (Router, utoipa::openapi::OpenApi) = OpenApiRouter::<AppState>::new()
         .merge(workspace_routes())
+        .merge(workspaces_routes())
         .with_state(app_state.clone())
         .split_for_parts();
 
