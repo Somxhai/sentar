@@ -1,63 +1,22 @@
-use axum::extract::Path;
-use axum::{Json, extract::State};
-use chrono::NaiveDateTime;
-use sea_orm::ActiveValue::Set;
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter};
-use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
-use utoipa_axum::{router::OpenApiRouter, routes};
-use uuid::Uuid;
-
 use crate::app::AppState;
+use crate::dto::workspace::{DeleteResponse, RenameRequest, WorkspaceRequest, WorkspaceResponse};
 use crate::error::AppError;
 use crate::model::workspace;
+use axum::extract::Path;
+use axum::{Json, extract::State};
+use sea_orm::ActiveValue::Set;
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter};
+use std::iter::Iterator;
+use utoipa_axum::{router::OpenApiRouter, routes};
+use uuid::Uuid;
 
 pub fn workspace_routes() -> OpenApiRouter<AppState> {
     OpenApiRouter::new().routes(routes!(
         create_workspace,
-        get_workspaces,
         delete_workspace,
         rename_workspace,
         get_workspace
     ))
-}
-
-#[derive(Deserialize, ToSchema)]
-struct WorkspaceRequest {
-    name: String,
-    owner_id: String,
-}
-
-#[derive(Deserialize, ToSchema)]
-struct RenameRequest {
-    id: Uuid,
-    name: String,
-}
-
-#[derive(Serialize, ToSchema)]
-struct DeleteResponse {
-    rows_affected: u64,
-}
-
-#[derive(Serialize, ToSchema)]
-struct WorkspaceResponse {
-    id: Uuid,
-    name: String,
-    owner_id: String,
-    created_at: NaiveDateTime,
-    updated_at: NaiveDateTime,
-}
-
-impl WorkspaceResponse {
-    fn from(workspace: workspace::Model) -> Self {
-        Self {
-            owner_id: workspace.owner_id,
-            id: workspace.id,
-            name: workspace.name,
-            created_at: workspace.created_at,
-            updated_at: workspace.updated_at,
-        }
-    }
 }
 
 #[utoipa::path(
@@ -80,26 +39,32 @@ async fn create_workspace(
     Ok(Json(WorkspaceResponse::from(workspace)))
 }
 
-#[utoipa::path(
+pub mod workspaces {
+    use super::*;
+
+    pub fn workspaces_routes() -> OpenApiRouter<AppState> {
+        OpenApiRouter::new().routes(routes!(get_workspaces))
+    }
+
+    #[utoipa::path(
     get,
     path = "/workspaces/{user_id}",
     tag = "workspace",
     responses((status = 200, body = inline(Vec<WorkspaceResponse>)))
 )]
-async fn get_workspaces(
-    State(app_state): State<AppState>,
-    Path(user_id): Path<String>,
-) -> Result<Json<Vec<WorkspaceResponse>>, AppError> {
-    let workspaces = workspace::Entity::find()
-        .filter(workspace::Column::OwnerId.eq(user_id))
-        .all(&*app_state.db)
-        .await?;
-    Ok(Json(
-        workspaces
+    async fn get_workspaces(
+        State(app_state): State<AppState>,
+        Path(user_id): Path<String>,
+    ) -> Result<Json<Vec<WorkspaceResponse>>, AppError> {
+        let workspaces = workspace::Entity::find()
+            .filter(workspace::Column::OwnerId.eq(user_id))
+            .all(&*app_state.db)
+            .await?
             .into_iter()
             .map(WorkspaceResponse::from)
-            .collect(),
-    ))
+            .collect();
+        Ok(Json(workspaces))
+    }
 }
 
 #[utoipa::path(
