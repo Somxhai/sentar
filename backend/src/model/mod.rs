@@ -3,9 +3,14 @@
 pub mod prelude;
 
 pub mod account;
-pub mod seat;
+pub mod event;
+pub mod event_object;
+pub mod event_object_grid;
+pub mod form;
+pub mod reservation;
+pub mod reservation_item;
+pub mod section;
 pub mod session;
 pub mod user;
 pub mod verification;
 pub mod workspace;
-pub mod workspace_object;
