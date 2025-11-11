@@ -1,24 +1,14 @@
 use axum_test::TestServer;
-use backend::{
-    dto::{
-        self,
-        workspace::{DeleteResponse, RenameRequest, WorkspaceRequest},
-    },
-    model::{user, workspace},
-};
-use chrono::NaiveDateTime;
+use backend::dto::workspace::{DeleteResponse, RenameRequest, WorkspaceRequest, WorkspaceResponse};
 use eyre::Result;
+use sea_orm::{DatabaseBackend, MockDatabase, MockExecResult};
 use serde_json::json;
-use std::{collections::BTreeMap, vec};
+use std::vec;
 use uuid::Uuid;
-
-use dto::workspace::WorkspaceResponse;
 
 mod common;
 
-use sea_orm::{ColIdx, DatabaseBackend, MockDatabase, MockExecResult, Update, Value};
-
-use crate::common::mock_workspace;
+use crate::common::helpers::{create_test_app, mock_workspace};
 
 #[tokio::test]
 async fn get_workspaces() -> Result<()> {
@@ -33,7 +23,7 @@ async fn get_workspaces() -> Result<()> {
     let mock_db =
         MockDatabase::new(DatabaseBackend::Postgres).append_query_results(vec![mock_data.clone()]);
 
-    let app = common::create_test_app(mock_db).await?;
+    let app = create_test_app(mock_db).await?;
     let server = TestServer::new(app).unwrap();
 
     let response = server
@@ -56,7 +46,7 @@ async fn create_workspace() -> Result<()> {
     let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
         .append_query_results(vec![vec![expected.clone()]]);
 
-    let app = common::create_test_app(mock_db).await?;
+    let app = create_test_app(mock_db).await?;
     let server = TestServer::new(app).unwrap();
 
     let response = server
@@ -84,10 +74,12 @@ async fn delete_workspace() -> Result<()> {
             last_insert_id: 0, // Not used, but required by the struct
         }]);
 
-    let app = common::create_test_app(mock_db).await?;
+    let app = create_test_app(mock_db).await?;
     let server = TestServer::new(app).unwrap();
 
-    let response = server.delete(format!("/workspace/{}", id).as_str()).await;
+    let response = server
+        .delete(format!("/workspace?workspace_id={}", id).as_str())
+        .await;
 
     response.assert_status_ok();
     let json: DeleteResponse = response.json();
@@ -113,7 +105,7 @@ async fn rename_workspaces() -> Result<()> {
         .append_query_results(vec![vec![mock_data.clone()]])
         .append_query_results(vec![vec![expected.clone()]]);
 
-    let app = common::create_test_app(mock_db).await?;
+    let app = create_test_app(mock_db).await?;
     let server = TestServer::new(app).unwrap();
 
     let response = server

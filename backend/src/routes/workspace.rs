@@ -2,10 +2,11 @@ use crate::app::AppState;
 use crate::dto::workspace::{DeleteResponse, RenameRequest, WorkspaceRequest, WorkspaceResponse};
 use crate::error::AppError;
 use crate::model::workspace;
-use axum::extract::Path;
+use axum::extract::{Path, Query};
 use axum::{Json, extract::State};
 use sea_orm::ActiveValue::Set;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter};
+use std::collections::HashMap;
 use std::iter::Iterator;
 use utoipa_axum::{router::OpenApiRouter, routes};
 use uuid::Uuid;
@@ -88,14 +89,25 @@ async fn get_workspace(
 
 #[utoipa::path(
     delete,
-    path = "/workspace/{workspace_id}",
+    path = "/workspace",
     tag = "workspace",
+    params(
+        ("workspace_id" = Uuid, Query, description = "ID of the workspace to delete")
+    ),
     responses((status = 200, body = DeleteResponse))
 )]
 async fn delete_workspace(
     State(app_state): State<AppState>,
-    Path(workspace_id): Path<Uuid>,
+    Query(params): Query<HashMap<String, String>>,
 ) -> Result<Json<DeleteResponse>, AppError> {
+    let workspace_id: Uuid = params
+        .get("workspace_id")
+        .ok_or(AppError::BadRequest(
+            "Missing `workspace_id` query parameter".to_string(),
+        ))?
+        .parse()
+        .map_err(|_| AppError::BadRequest("Invalid UUID for `workspace_id`".to_string()))?;
+
     let result = workspace::Entity::delete_by_id(workspace_id)
         .exec(&*app_state.db)
         .await?;

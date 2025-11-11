@@ -17,6 +17,9 @@ pub enum AppError {
     #[error("Unauthorized")]
     Unauthorized,
 
+    #[error("Bad request: {0}")]
+    BadRequest(String),
+
     #[error("Validation error: {0}")]
     Validation(String),
 
@@ -45,6 +48,7 @@ impl IntoResponse for AppError {
             }
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, "Not found", Some(msg)),
             AppError::Unauthorized => (StatusCode::UNAUTHORIZED, "Unauthorized", None),
+            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, "Bad request", Some(msg)),
             AppError::Validation(msg) => (StatusCode::BAD_REQUEST, "Validation error", Some(msg)),
             AppError::Internal => (
                 StatusCode::INTERNAL_SERVER_ERROR,
