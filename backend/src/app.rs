@@ -6,7 +6,12 @@ use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::routes::workspace::{workspace_routes, workspaces::workspaces_routes};
+use crate::routes::{
+    event::event_routes,
+    form::form_routes,
+    section::section_routes,
+    workspace::{workspace_routes, workspaces::workspaces_routes},
+};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -43,6 +48,9 @@ pub fn create_router(db: DatabaseConnection) -> Result<Router> {
     let (router, api): (Router, utoipa::openapi::OpenApi) = OpenApiRouter::<AppState>::new()
         .merge(workspace_routes())
         .merge(workspaces_routes())
+        .merge(event_routes())
+        .merge(section_routes())
+        .merge(form_routes())
         .with_state(app_state.clone())
         .split_for_parts();
 
