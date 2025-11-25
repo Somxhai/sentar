@@ -31,8 +31,8 @@ async fn create_form(
         event_id: Set(body.event_id),
         title: Set(body.title),
         description: Set(body.description),
-        schema: Set(body.schema.map(Into::into)),
-        settings: Set(body.settings.map(Into::into)),
+        schema: Set(body.schema),
+        settings: Set(body.settings),
         ..Default::default()
     };
 
@@ -82,10 +82,10 @@ async fn update_form(
         form.description = Set(Some(description));
     }
     if let Some(schema) = body.schema {
-        form.schema = Set(Some(schema.into()));
+        form.schema = Set(Some(schema));
     }
     if let Some(settings) = body.settings {
-        form.settings = Set(Some(settings.into()));
+        form.settings = Set(Some(settings));
     }
 
     let updated_form = form.update(&*app_state.db).await?;
