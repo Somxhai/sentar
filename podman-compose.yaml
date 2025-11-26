@@ -1,12 +1,14 @@
 services:
-  # backend:
-  #   build: ./backend
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     - db
-  #   environment:
-  #     DATABASE_URL: postgres://devuser:devpass@db:5432/devdb
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - ./backend/.env
+    networks:
+      - app
 
   db:
     image: postgres:17
@@ -22,7 +24,45 @@ services:
       timeout: 3s
       retries: 5
 
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - app
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3030:3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - app
+
+  loki:
+    image: grafana/loki:latest
+    depends_on:
+      - prometheus
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki-data:/loki
+      - ./loki-config.yaml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - app
+
 
 volumes:
   pgdata: 
+  prometheus-data:
+  grafana-data:
+  loki-data:
 
+networks:
+  app:
