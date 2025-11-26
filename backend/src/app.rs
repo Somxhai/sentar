@@ -1,10 +1,4 @@
-use std::{env, sync::Arc, time::Duration};
-
-use axum::Router;
-use eyre::Result;
-use sea_orm::{ConnectOptions, Database, DatabaseConnection};
-use utoipa_axum::router::OpenApiRouter;
-use utoipa_swagger_ui::SwaggerUi;
+use std::{env, process, sync::Arc, time::Duration};
 
 use crate::routes::{
     event::event_routes,
@@ -12,6 +6,13 @@ use crate::routes::{
     section::section_routes,
     workspace::{workspace_routes, workspaces::workspaces_routes},
 };
+use axum::{Router, routing::get};
+use axum_prometheus::PrometheusMetricLayer;
+use eyre::Result;
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
+use tracing_loki::url::Url;
+use utoipa_axum::router::OpenApiRouter;
+use utoipa_swagger_ui::SwaggerUi;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -43,7 +44,7 @@ pub async fn create_database() -> Result<DatabaseConnection> {
 
 pub fn create_router(db: DatabaseConnection) -> Result<Router> {
     let app_state = AppState::new(Arc::new(db));
-
+    let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
     // Build router and OpenAPI spec
     let (router, api): (Router, utoipa::openapi::OpenApi) = OpenApiRouter::<AppState>::new()
         .merge(workspace_routes())
@@ -51,6 +52,8 @@ pub fn create_router(db: DatabaseConnection) -> Result<Router> {
         .merge(event_routes())
         .merge(section_routes())
         .merge(form_routes())
+        .route("/metrics", get(|| async move { metric_handle.render() }))
+        .layer(prometheus_layer)
         .with_state(app_state.clone())
         .split_for_parts();
 
