@@ -21,7 +21,8 @@ pub mod routes;
 #[tokio::main]
 async fn main() -> Result<()> {
     let (layer, task) = tracing_loki::builder()
-        .label("host", "mine")?
+        .label("service", "sentar-backend")?
+        .label("environment", "development")?
         .extra_field("pid", format!("{}", process::id()))?
         .build_url(Url::parse("http://127.0.0.1:3100").unwrap())?;
 
