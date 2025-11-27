@@ -31,10 +31,10 @@ pub async fn create_database() -> Result<DatabaseConnection> {
     let mut opt = ConnectOptions::new(database_url);
     opt.max_connections(100)
         .min_connections(5)
-        .connect_timeout(Duration::from_secs(8))
+        .connect_timeout(Duration::from_secs(5))
         .acquire_timeout(Duration::from_secs(8))
-        .idle_timeout(Duration::from_secs(8))
-        .max_lifetime(Duration::from_secs(8))
+        .idle_timeout(Duration::from_mins(8))
+        .max_lifetime(Duration::from_mins(30))
         .sqlx_logging(true)
         .set_schema_search_path("public"); // Setting default PostgreSQL schema
 
