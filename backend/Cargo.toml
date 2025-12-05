@@ -27,6 +27,6 @@ tracing-loki = "0.2.6"
 tracing-opentelemetry = "0.32.0"
 opentelemetry = "0.31.0"
 opentelemetry_sdk = "0.31.0"
-opentelemetry-otlp = "0.31.0"
+opentelemetry-otlp = {version="0.31.0", features=["grpc-tonic"]}
 opentelemetry-stdout = "0.31.0"
 opentelemetry-appender-tracing = "0.31.1"
