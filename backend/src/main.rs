@@ -1,22 +1,40 @@
 use std::net::SocketAddr;
 
+use crate::app::create_router;
+use crate::observe::create_logging_provider;
+use crate::observe::create_oltp_provider;
 use backend::app::create_database;
 use eyre::Result;
+use opentelemetry::global;
+use opentelemetry_sdk::propagation::TraceContextPropagator;
 use tracing::error;
 use tracing::info;
-
-use crate::app::create_router;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 
 pub mod app;
 pub mod dto;
 pub mod error;
 pub mod model;
+mod observe;
+pub mod prometheus;
 pub mod routes;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    tracing_subscriber::fmt().init();
+    info!("Initializing app");
     dotenv::dotenv().ok();
+    global::set_text_map_propagator(TraceContextPropagator::new());
+    let (toki_layer, task) = create_logging_provider()?;
+    tokio::spawn(task);
+
+    let otel_layer = create_oltp_provider()?;
+
+    tracing_subscriber::registry()
+        .with(otel_layer)
+        .with(toki_layer)
+        .with(tracing_subscriber::fmt::Layer::new())
+        .init();
 
     let db = create_database().await?;
 
