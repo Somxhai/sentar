@@ -56,13 +56,27 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     networks:
       - app
-
+  tempo:
+    image: grafana/tempo:latest
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - tempo-data:/var/tempo
+      - ./tempo.yaml:/etc/tempo.yaml
+    ports:
+      - "3200:3200"   # Tempo metrics & admin
+      - "4317:4317"   # OTLP gRPC (Rust มักใช้อันนี้)
+      - "4318:4318"   # OTLP HTTP
+    networks:
+      - app
+    depends:
+      - prometheus
 
 volumes:
   pgdata: 
   prometheus-data:
   grafana-data:
   loki-data:
+  tempo-data:
 
 networks:
   app:
