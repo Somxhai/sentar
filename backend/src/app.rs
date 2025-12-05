@@ -3,6 +3,7 @@ use std::{env, process, sync::Arc, time::Duration};
 use crate::routes::{
     event::event_routes,
     form::form_routes,
+    health_check,
     section::section_routes,
     workspace::{workspace_routes, workspaces::workspaces_routes},
 };
@@ -53,6 +54,7 @@ pub fn create_router(db: DatabaseConnection) -> Result<Router> {
         .merge(section_routes())
         .merge(form_routes())
         .route("/metrics", get(|| async move { metric_handle.render() }))
+        .route("/health", get(health_check))
         .layer(prometheus_layer)
         .with_state(app_state.clone())
         .split_for_parts();
