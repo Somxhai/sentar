@@ -6,11 +6,15 @@ use crate::routes::{
     workspace::{workspace_routes, workspaces::workspaces_routes},
 };
 use axum::{Router, routing::get};
-use axum_prometheus::PrometheusMetricLayer;
+use axum_prometheus::{PrometheusMetricLayer, metrics_exporter_prometheus::PrometheusHandle};
 use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use eyre::Result;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
-use std::{env, sync::Arc, time::Duration};
+use std::{
+    env,
+    sync::{Arc, OnceLock},
+    time::Duration,
+};
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -42,9 +46,13 @@ pub async fn create_database() -> Result<DatabaseConnection> {
     Ok(db)
 }
 
+static PROMETHEUS: OnceLock<(PrometheusMetricLayer, PrometheusHandle)> = OnceLock::new();
+
 pub fn create_router(db: DatabaseConnection) -> Result<Router> {
     let app_state = AppState::new(Arc::new(db));
-    let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
+    let (prometheus_layer, metric_handle) = PROMETHEUS
+        .get_or_init(|| PrometheusMetricLayer::pair())
+        .clone();
     // Build router and OpenAPI spec
     let (router, api): (Router, utoipa::openapi::OpenApi) = OpenApiRouter::<AppState>::new()
         .merge(workspace_routes())
