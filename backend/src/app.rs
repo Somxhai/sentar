@@ -1,5 +1,3 @@
-use std::{env, process, sync::Arc, time::Duration};
-
 use crate::routes::{
     event::event_routes,
     form::form_routes,
@@ -9,13 +7,14 @@ use crate::routes::{
 };
 use axum::{Router, routing::get};
 use axum_prometheus::PrometheusMetricLayer;
+use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use eyre::Result;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
-use tracing_loki::url::Url;
+use std::{env, sync::Arc, time::Duration};
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AppState {
     pub db: Arc<DatabaseConnection>,
 }
@@ -56,6 +55,8 @@ pub fn create_router(db: DatabaseConnection) -> Result<Router> {
         .route("/metrics", get(|| async move { metric_handle.render() }))
         .route("/health", get(health_check))
         .layer(prometheus_layer)
+        .layer(OtelInResponseLayer::default())
+        .layer(OtelAxumLayer::default())
         .with_state(app_state.clone())
         .split_for_parts();
 
