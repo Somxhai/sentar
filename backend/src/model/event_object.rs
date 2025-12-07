@@ -3,7 +3,9 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
+#[derive(
+    Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, utoipa :: ToSchema,
+)]
 #[sea_orm(table_name = "event_object")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
@@ -28,6 +30,8 @@ pub enum Relation {
         on_delete = "Cascade"
     )]
     Event,
+    #[sea_orm(has_many = "super::event_object_position::Entity")]
+    EventObjectPosition,
     #[sea_orm(has_many = "super::reservation_item::Entity")]
     ReservationItem,
     #[sea_orm(
@@ -43,6 +47,12 @@ pub enum Relation {
 impl Related<super::event::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Event.def()
+    }
+}
+
+impl Related<super::event_object_position::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::EventObjectPosition.def()
     }
 }
 

@@ -3,7 +3,9 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
+#[derive(
+    Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, utoipa :: ToSchema,
+)]
 #[sea_orm(table_name = "event")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
@@ -13,8 +15,8 @@ pub struct Model {
     pub description: Option<String>,
     #[sea_orm(column_type = "JsonBinary", nullable)]
     pub settings: Option<Json>,
-    pub starts_at: Option<DateTimeWithTimeZone>,
-    pub ends_at: Option<DateTimeWithTimeZone>,
+    pub starts_at: Option<DateTime>,
+    pub ends_at: Option<DateTime>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }
@@ -23,8 +25,6 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::event_object::Entity")]
     EventObject,
-    #[sea_orm(has_many = "super::event_object_grid::Entity")]
-    EventObjectGrid,
     #[sea_orm(has_many = "super::form::Entity")]
     Form,
     #[sea_orm(has_many = "super::reservation::Entity")]
@@ -44,12 +44,6 @@ pub enum Relation {
 impl Related<super::event_object::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::EventObject.def()
-    }
-}
-
-impl Related<super::event_object_grid::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::EventObjectGrid.def()
     }
 }
 
