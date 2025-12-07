@@ -5,7 +5,7 @@ pub mod prelude;
 pub mod account;
 pub mod event;
 pub mod event_object;
-pub mod event_object_grid;
+pub mod event_object_position;
 pub mod form;
 pub mod reservation;
 pub mod reservation_item;

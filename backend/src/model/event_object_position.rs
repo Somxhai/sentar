@@ -6,14 +6,17 @@ use serde::{Deserialize, Serialize};
 #[derive(
     Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize, utoipa :: ToSchema,
 )]
-#[sea_orm(table_name = "section")]
+#[sea_orm(table_name = "event_object_position")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
-    pub event_id: Uuid,
-    pub title: String,
+    pub event_object_id: Uuid,
     #[sea_orm(column_type = "Double")]
-    pub price: f64,
+    pub position_x: f64,
+    #[sea_orm(column_type = "Double")]
+    pub position_y: f64,
+    #[sea_orm(column_type = "Double")]
+    pub rotation: f64,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }
@@ -21,21 +24,13 @@ pub struct Model {
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::event::Entity",
-        from = "Column::EventId",
-        to = "super::event::Column::Id",
-        on_update = "Cascade",
+        belongs_to = "super::event_object::Entity",
+        from = "Column::EventObjectId",
+        to = "super::event_object::Column::Id",
+        on_update = "NoAction",
         on_delete = "Cascade"
     )]
-    Event,
-    #[sea_orm(has_many = "super::event_object::Entity")]
     EventObject,
-}
-
-impl Related<super::event::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Event.def()
-    }
 }
 
 impl Related<super::event_object::Entity> for Entity {

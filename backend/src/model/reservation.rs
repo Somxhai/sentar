@@ -3,7 +3,9 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[derive(
+    Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize, utoipa :: ToSchema,
+)]
 #[sea_orm(table_name = "reservation")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
@@ -13,7 +15,7 @@ pub struct Model {
     pub status: String,
     #[sea_orm(column_type = "Double")]
     pub total_price: f64,
-    pub expires_at: Option<DateTimeWithTimeZone>,
+    pub expires_at: Option<DateTime>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
 }
