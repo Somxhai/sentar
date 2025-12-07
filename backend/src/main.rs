@@ -1,45 +1,54 @@
-use axum::{Json, Router};
-use serde::Serialize;
 use std::net::SocketAddr;
-use tracing::error;
-use utoipa_axum::{router::OpenApiRouter, routes};
-use utoipa_swagger_ui::SwaggerUi;
 
-mod routes;
+use crate::app::create_router;
+use crate::observe::create_logging_provider;
+use crate::observe::create_oltp_provider;
+use backend::app::create_database;
+use eyre::Result;
+use opentelemetry::global;
+use opentelemetry_sdk::propagation::TraceContextPropagator;
+use tracing::error;
+use tracing::info;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+
+pub mod app;
+pub mod dto;
+pub mod error;
+pub mod model;
+mod observe;
+pub mod prometheus;
+pub mod routes;
 
 #[tokio::main]
-async fn main() {
-    tracing_subscriber::fmt().init();
+async fn main() -> Result<()> {
+    info!("Initializing app");
+    dotenv::dotenv().ok();
+    global::set_text_map_propagator(TraceContextPropagator::new());
+    let (toki_layer, task) = create_logging_provider()?;
+    tokio::spawn(task);
 
-    // Build router and OpenAPI spec
-    let (router, api): (Router, utoipa::openapi::OpenApi) =
-        OpenApiRouter::new().routes(routes!(ping)).split_for_parts();
+    let otel_layer = create_oltp_provider()?;
 
-    // Merge Swagger UI route
-    let app = router.merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", api));
+    tracing_subscriber::registry()
+        .with(otel_layer)
+        .with(toki_layer)
+        .with(tracing_subscriber::fmt::Layer::new())
+        .init();
 
-    // Start server
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let db = create_database().await?;
+
+    let app = create_router(db)?;
+    let port: u16 = std::env::var("PORT")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(3000);
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
+
+    info!("Server runs on {}", addr);
     axum_server::bind(addr)
         .serve(app.into_make_service())
         .await
         .unwrap_or_else(|err| error!("Cannot start the server: {}", err));
-}
-
-#[derive(Serialize, utoipa::ToSchema)]
-struct PingResponse {
-    message: String,
-}
-
-#[utoipa::path(
-    get,
-    path = "/",
-    responses(
-        (status = 200, description = "Ping successful", body = PingResponse)
-    )
-)]
-async fn ping() -> Json<PingResponse> {
-    Json(PingResponse {
-        message: "Ping!".to_string(),
-    })
+    Ok(())
 }

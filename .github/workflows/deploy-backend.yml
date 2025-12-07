@@ -1,0 +1,23 @@
+name: Deploy backend
+on: 
+  workflow_dispatch: 
+  pull_request: 
+    branches: [main]
+    paths: 
+      - 'backend/**'
+  push:
+    branches: [main]
+    paths: 
+      - 'backend/**'
+
+jobs:
+  test:
+    name: Test backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --all-features
