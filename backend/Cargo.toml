@@ -28,3 +28,6 @@ opentelemetry = "0.31.0"
 opentelemetry_sdk = "0.31.0"
 opentelemetry-otlp = {version="0.31.0", features=["grpc-tonic"]}
 axum-tracing-opentelemetry = "0.32.2"
+jsonwebtoken = "10.2.0"
+axum-extra = {version = "0.12.2", features=["typed-header"]}
+base64-url = "3.0.2"
