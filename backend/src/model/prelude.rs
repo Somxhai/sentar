@@ -5,6 +5,7 @@ pub use super::event::Entity as Event;
 pub use super::event_object::Entity as EventObject;
 pub use super::event_object_position::Entity as EventObjectPosition;
 pub use super::form::Entity as Form;
+pub use super::jwks::Entity as Jwks;
 pub use super::reservation::Entity as Reservation;
 pub use super::reservation_item::Entity as ReservationItem;
 pub use super::section::Entity as Section;
