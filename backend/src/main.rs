@@ -15,6 +15,7 @@ use tracing_subscriber::util::SubscriberInitExt;
 pub mod app;
 pub mod dto;
 pub mod error;
+pub mod middleware;
 pub mod model;
 mod observe;
 pub mod prometheus;
