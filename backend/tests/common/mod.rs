@@ -3,7 +3,7 @@ pub mod helpers {
 
     use axum::Router;
     use backend::{
-        app::create_router,
+        app::{cache::create_cache, create_router},
         model::{event, form, section, workspace},
     };
     use chrono::{DateTime, NaiveDateTime};
@@ -13,7 +13,8 @@ pub mod helpers {
 
     pub async fn create_test_app(mock_db: MockDatabase) -> Result<Router> {
         let db = mock_db.into_connection();
-        Ok(create_router(db)?)
+        let cache = create_cache().await?;
+        Ok(create_router(db, cache)?)
     }
 
     pub fn mock_datetime() -> NaiveDateTime {

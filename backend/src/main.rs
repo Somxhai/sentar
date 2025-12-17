@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 use crate::app::create_router;
 use crate::observe::create_logging_provider;
 use crate::observe::create_oltp_provider;
+use backend::app::cache::create_cache;
 use backend::app::create_database;
 use eyre::Result;
 use opentelemetry::global;
@@ -20,6 +21,7 @@ pub mod model;
 mod observe;
 pub mod prometheus;
 pub mod routes;
+pub mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -35,11 +37,17 @@ async fn main() -> Result<()> {
         .with(otel_layer)
         .with(toki_layer)
         .with(tracing_subscriber::fmt::Layer::new())
+        // .with(EnvFilter::new("debug"))
         .init();
 
     let db = create_database().await?;
+    let cache = create_cache().await?;
 
-    let app = create_router(db)?;
+    // let jwks = get_jwks().await?;
+
+    let app = create_router(
+        db, cache, // jwks
+    )?;
     let port: u16 = std::env::var("PORT")
         .ok()
         .and_then(|v| v.parse().ok())
