@@ -1,4 +1,19 @@
 services:
+  valkey:
+    image: valkey/valkey:9.0.1
+    volumes:
+      # - valkey.conf:/etc/valkey/valkey.conf
+      - valkey-data:/data
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "valkey-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   backend:
     build: ./backend
     ports:
@@ -77,6 +92,7 @@ volumes:
   grafana-data:
   loki-data:
   tempo-data:
+  valkey-data:
 
 networks:
   app:
