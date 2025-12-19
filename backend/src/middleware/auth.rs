@@ -7,16 +7,9 @@ use axum_extra::extract::CookieJar;
 use chrono::NaiveDateTime;
 use fred::{prelude::KeysInterface, types::Expiration};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
-use serde::{Deserialize, Serialize};
 use tracing::{debug, error, warn};
 
-use crate::{app::AppState, error::AppError, model::session};
-
-#[derive(Serialize, Debug, Clone, Deserialize)]
-struct SessionCache {
-    user_id: String,
-    expires_at: NaiveDateTime,
-}
+use crate::{app::AppState, dto::cache::SessionCache, error::AppError, model::session};
 
 pub async fn auth_session_guard(
     jar: CookieJar,
