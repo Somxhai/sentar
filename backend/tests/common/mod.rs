@@ -1,21 +1,11 @@
-#[allow(dead_code)]
+pub mod server;
+#[allow(unused)]
 pub mod helpers {
 
-    use axum::Router;
-    use backend::{
-        app::{cache::create_cache, create_router},
-        model::{event, form, section, workspace},
-    };
+    use backend::model::{event, form, section, workspace};
     use chrono::{DateTime, NaiveDateTime};
-    use eyre::Result;
-    use sea_orm::MockDatabase;
+    use sea_orm::{ActiveValue::Set, TryIntoModel};
     use uuid::Uuid;
-
-    pub async fn create_test_app(mock_db: MockDatabase) -> Result<Router> {
-        let db = mock_db.into_connection();
-        let cache = create_cache().await?;
-        Ok(create_router(db, cache)?)
-    }
 
     pub fn mock_datetime() -> NaiveDateTime {
         DateTime::from_timestamp(1700000000, 0).unwrap().naive_utc()
@@ -31,6 +21,7 @@ pub mod helpers {
             updated_at: now,
         }
     }
+
     pub fn mock_section(id: Uuid, title: &str, event_id: Uuid, price: f64) -> section::Model {
         let now = mock_datetime();
         section::Model {
