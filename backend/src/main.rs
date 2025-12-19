@@ -1,11 +1,11 @@
 use std::net::SocketAddr;
 
-use crate::app::create_router;
-use crate::observe::create_logging_provider;
-use crate::observe::create_oltp_provider;
-use backend::app::cache::create_cache;
-use backend::app::create_database;
+use app::cache::create_cache;
+use app::create_database;
+use app::create_router;
 use eyre::Result;
+use observe::create_logging_provider;
+use observe::create_oltp_provider;
 use opentelemetry::global;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use tracing::error;
