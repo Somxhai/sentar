@@ -1,6 +1,6 @@
 use eyre::Result;
-use fred::{clients, prelude::*};
-use std::{env, time::Duration};
+use fred::{clients, mocks::SimpleMap, prelude::*};
+use std::{env, sync::Arc, time::Duration};
 
 pub async fn create_cache() -> Result<clients::Pool> {
     let pool_size = env::var("REDIS_POOL_SIZE")
@@ -20,5 +20,15 @@ pub async fn create_cache() -> Result<clients::Pool> {
 
     pool.init().await.expect("Failed to connect to redis");
 
+    Ok(pool)
+}
+
+pub async fn create_test_cache() -> Result<clients::Pool> {
+    let config = Config {
+        mocks: Some(Arc::new(SimpleMap::new())),
+        ..Default::default()
+    };
+    let pool = Builder::from_config(config).build_pool(5).unwrap();
+    pool.init().await.expect("Failed to connect");
     Ok(pool)
 }
