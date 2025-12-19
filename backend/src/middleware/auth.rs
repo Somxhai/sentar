@@ -38,12 +38,11 @@ pub async fn auth_session_guard(
         }
     };
 
-    if let Some(session_data) = cached_session {
-        if session_data.expires_at > chrono::Utc::now().naive_utc() {
+    if let Some(session_data) = cached_session
+        && session_data.expires_at > chrono::Utc::now().naive_utc() {
             req.extensions_mut().insert(session_data);
             return Ok(next.run(req).await);
         }
-    }
 
     let session = Entity::find()
         .filter(session::Column::Token.eq(session_token))
