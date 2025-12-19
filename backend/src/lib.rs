@@ -1,5 +1,7 @@
 pub mod app;
 pub mod dto;
-mod error;
+pub mod error;
+mod middleware;
 pub mod model;
-mod routes;
+pub mod routes;
+pub mod utils;

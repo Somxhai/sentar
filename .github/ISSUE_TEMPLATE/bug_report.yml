@@ -1,0 +1,29 @@
+name: Bug report
+description: Template for bug reports
+title: '[Bug]: '
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Logs
+  - type: dropdown
+    id: Browser
+    attributes:
+      label: Browser
+      description: What browsers are you seeing the problem on ?
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Others
+  - type: markdown
+    attributes:
+      value: >-
+        This template was generated with [Issue Forms
+        Creator](https://issue-forms-creator.netlify.app)

@@ -1,4 +1,5 @@
-use axum_test::TestServer;
+use crate::common::helpers::mock_form;
+use crate::common::server::create_test_app;
 use backend::dto::form::{FormRequest, FormResponse, UpdateFormRequest};
 use backend::dto::workspace::DeleteResponse;
 use eyre::Result;
@@ -6,7 +7,6 @@ use sea_orm::{DatabaseBackend, MockDatabase, MockExecResult};
 use serde_json::json;
 use uuid::Uuid;
 mod common;
-use crate::common::helpers::{create_test_app, mock_form};
 
 #[tokio::test]
 async fn get_form() -> Result<()> {
@@ -17,8 +17,7 @@ async fn get_form() -> Result<()> {
     let mock_data = mock_form(id, event_id, title, description);
     let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
         .append_query_results(vec![vec![mock_data.clone()]]);
-    let app = create_test_app(mock_db).await?;
-    let server = TestServer::new(app).unwrap();
+    let server = create_test_app(mock_db).await?;
     let response = server.get(format!("/form/{}", id).as_str()).await;
     response.assert_status_ok();
     response.assert_json(&FormResponse { form: mock_data });
@@ -34,8 +33,7 @@ async fn create_form() -> Result<()> {
     let expected = mock_form(id, event_id, title, description);
     let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
         .append_query_results(vec![vec![expected.clone()]]);
-    let app = create_test_app(mock_db).await?;
-    let server = TestServer::new(app).unwrap();
+    let server = create_test_app(mock_db).await?;
     let response = server
         .post("/form")
         .json(&json!(FormRequest {
@@ -59,8 +57,7 @@ async fn delete_form() -> Result<()> {
             rows_affected: 1,
             last_insert_id: 0,
         }]);
-    let app = create_test_app(mock_db).await?;
-    let server = TestServer::new(app).unwrap();
+    let server = create_test_app(mock_db).await?;
     let response = server
         .delete(format!("/form?form_id={}", id).as_str())
         .await;
@@ -82,8 +79,7 @@ async fn update_form() -> Result<()> {
     let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
         .append_query_results(vec![vec![mock_old.clone()]])
         .append_query_results(vec![vec![mock_new.clone()]]);
-    let app = create_test_app(mock_db).await?;
-    let server = TestServer::new(app).unwrap();
+    let server = create_test_app(mock_db).await?;
     let response = server
         .put("/form")
         .json(&json!(UpdateFormRequest {

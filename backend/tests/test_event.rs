@@ -1,13 +1,13 @@
-use axum_test::TestServer;
 use backend::dto::event::{EventRequest, EventResponse, UpdateEventRequest};
 use backend::dto::workspace::DeleteResponse;
 use eyre::Result;
 use sea_orm::{DatabaseBackend, MockDatabase, MockExecResult};
 use serde_json::json;
 use uuid::Uuid;
-
 mod common;
-use crate::common::helpers::{create_test_app, mock_event};
+
+use crate::common::helpers::mock_event;
+use crate::common::server::create_test_app;
 
 #[tokio::test]
 async fn get_event() -> Result<()> {
@@ -20,8 +20,7 @@ async fn get_event() -> Result<()> {
     let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
         .append_query_results(vec![vec![mock_data.clone()]]);
 
-    let app = create_test_app(mock_db).await?;
-    let server = TestServer::new(app).unwrap();
+    let server = create_test_app(mock_db).await?;
 
     let response = server.get(format!("/event/{}", id).as_str()).await;
 
@@ -43,8 +42,7 @@ async fn create_event() -> Result<()> {
     let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
         .append_query_results(vec![vec![expected.clone()]]);
 
-    let app = create_test_app(mock_db).await?;
-    let server = TestServer::new(app).unwrap();
+    let server = create_test_app(mock_db).await?;
 
     let response = server
         .post("/event")
@@ -74,8 +72,7 @@ async fn delete_event() -> Result<()> {
             last_insert_id: 0,
         }]);
 
-    let app = create_test_app(mock_db).await?;
-    let server = TestServer::new(app).unwrap();
+    let server = create_test_app(mock_db).await?;
 
     let response = server
         .delete(format!("/event?event_id={}", id).as_str())
@@ -101,8 +98,7 @@ async fn update_event() -> Result<()> {
         .append_query_results(vec![vec![mock_old.clone()]])
         .append_query_results(vec![vec![mock_new.clone()]]);
 
-    let app = create_test_app(mock_db).await?;
-    let server = TestServer::new(app).unwrap();
+    let server = create_test_app(mock_db).await?;
 
     let response = server
         .put("/event")
