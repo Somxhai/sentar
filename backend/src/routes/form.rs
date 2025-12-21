@@ -37,7 +37,7 @@ async fn create_form(
     };
 
     let form = form.insert(&*app_state.db).await?;
-    Ok(Json(FormResponse { form }))
+    Ok(Json(form.into()))
 }
 
 #[utoipa::path(
@@ -55,7 +55,7 @@ async fn get_form(
         .await?
         .ok_or(AppError::NotFound("Form not found".to_string()))?;
 
-    Ok(Json(FormResponse { form }))
+    Ok(Json(form.into()))
 }
 
 #[utoipa::path(
@@ -89,7 +89,7 @@ async fn update_form(
     }
 
     let updated_form = form.update(&*app_state.db).await?;
-    Ok(Json(FormResponse { form: updated_form }))
+    Ok(Json(updated_form.into()))
 }
 
 #[utoipa::path(

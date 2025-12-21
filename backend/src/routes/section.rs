@@ -37,7 +37,7 @@ pub async fn get_section(
         .one(&*app_state.db)
         .await?
         .ok_or(AppError::NotFound("Section not found".to_string()))?;
-    Ok(Json(SectionResponse { section }))
+    Ok(Json(SectionResponse::from(section)))
 }
 
 #[utoipa::path(
@@ -59,7 +59,7 @@ async fn create_section(
     };
 
     let section = section.insert(&*app_state.db).await?;
-    Ok(Json(SectionResponse { section }))
+    Ok(Json(SectionResponse::from(section)))
 }
 
 #[utoipa::path(
@@ -120,7 +120,5 @@ async fn update_section(
     }
 
     let updated_section = section.update(&*app_state.db).await?;
-    Ok(Json(SectionResponse {
-        section: updated_section,
-    }))
+    Ok(Json(SectionResponse::from(updated_section)))
 }
