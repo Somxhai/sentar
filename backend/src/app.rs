@@ -20,7 +20,7 @@ use std::{
 };
 use tower_http::cors::CorsLayer;
 use utoipa_axum::router::OpenApiRouter;
-use utoipa_swagger_ui::SwaggerUi;
+use utoipa_scalar::{Scalar, Servable};
 
 pub mod cache;
 
@@ -102,7 +102,9 @@ pub fn create_router(
         .split_for_parts();
 
     // Merge Swagger UI route
-    let app = router.merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", api));
+    let app = router
+        // .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", &api))
+        .merge(Scalar::with_url("/docs", api));
 
     Ok(app)
 }
