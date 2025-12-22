@@ -1,9 +1,8 @@
 use crate::{
     middleware::auth::auth_session_guard,
     routes::{
-        event::event_routes,
+        event::{event_routes, public_event_routes},
         form::form_routes,
-        health_check,
         section::section_routes,
         workspace::{workspace_routes, workspaces::workspaces_routes},
     },
@@ -19,7 +18,7 @@ use std::{
     time::Duration,
 };
 use tower_http::cors::CorsLayer;
-use utoipa_axum::router::OpenApiRouter;
+use utoipa_axum::{router::OpenApiRouter, routes};
 use utoipa_scalar::{Scalar, Servable};
 
 pub mod cache;
@@ -80,8 +79,9 @@ pub fn create_router(
         .allow_credentials(true);
 
     let public = OpenApiRouter::<AppState>::new()
-        .route("/health", get(health_check))
-        .route("/metrics", get(|| async move { metric_handle.render() }));
+        .routes(routes!(crate::routes::health_check))
+        .route("/metrics", get(|| async move { metric_handle.render() }))
+        .merge(public_event_routes());
 
     let protected = OpenApiRouter::<AppState>::new()
         .merge(workspace_routes())

@@ -8,6 +8,15 @@ pub mod form;
 pub mod section;
 pub mod workspace;
 
+#[utoipa::path(
+    get,
+    path = "/health",
+    tag = "public",
+    responses(
+        (status = 200, description = "App is healthy")
+    )
+
+)]
 pub async fn health_check(State(app_state): State<AppState>) -> Result<StatusCode, AppError> {
     app_state
         .db
