@@ -20,7 +20,7 @@ async fn get_form() -> Result<()> {
     let server = create_test_app(mock_db).await?;
     let response = server.get(format!("/form/{}", id).as_str()).await;
     response.assert_status_ok();
-    response.assert_json(&FormResponse { form: mock_data });
+    response.assert_json(&FormResponse::from(mock_data));
     Ok(())
 }
 
@@ -45,7 +45,7 @@ async fn create_form() -> Result<()> {
         }))
         .await;
     response.assert_status_ok();
-    response.assert_json(&FormResponse { form: expected });
+    response.assert_json(&FormResponse::from(expected));
     Ok(())
 }
 
@@ -91,6 +91,6 @@ async fn update_form() -> Result<()> {
         }))
         .await;
     response.assert_status_ok();
-    response.assert_json(&FormResponse { form: mock_new });
+    response.assert_json(&FormResponse::from(mock_new));
     Ok(())
 }

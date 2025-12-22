@@ -26,7 +26,7 @@ async fn get_section() -> Result<()> {
     let response = server.get(format!("/section/{}", id).as_str()).await;
 
     response.assert_status_ok();
-    response.assert_json(&SectionResponse { section: mock_data });
+    response.assert_json(&SectionResponse::from(mock_data));
 
     Ok(())
 }
@@ -54,7 +54,7 @@ async fn create_section() -> Result<()> {
         .await;
 
     response.assert_status_ok();
-    response.assert_json(&SectionResponse { section: expected });
+    response.assert_json(&SectionResponse::from(expected));
     Ok(())
 }
 
@@ -105,6 +105,6 @@ async fn update_section() -> Result<()> {
         .await;
 
     response.assert_status_ok();
-    response.assert_json(&SectionResponse { section: mock_new });
+    response.assert_json(&SectionResponse::from(mock_new));
     Ok(())
 }
