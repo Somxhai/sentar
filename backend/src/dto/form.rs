@@ -33,6 +33,20 @@ pub struct FormResponse {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }
+impl From<form::ModelEx> for FormResponse {
+    fn from(value: form::ModelEx) -> Self {
+        Self {
+            id: value.id,
+            event_id: value.event_id,
+            schema: value.schema,
+            settings: value.settings,
+            title: value.title,
+            description: value.description,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+        }
+    }
+}
 
 impl From<form::Model> for FormResponse {
     fn from(m: form::Model) -> Self {
