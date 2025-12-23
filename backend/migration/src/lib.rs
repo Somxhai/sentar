@@ -6,6 +6,8 @@ mod m20251207_021458_decimal_and_object_grid_schema;
 mod m20251207_041152_drop_event_object_grid;
 mod m20251207_042647_change_time_to_utc;
 mod m20251211_142132_jwks;
+mod m20251222_073639_form_submission;
+mod m20251223_134134_rbac_and_moddatetime;
 
 pub struct Migrator;
 
@@ -19,6 +21,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20251207_041152_drop_event_object_grid::Migration),
             Box::new(m20251207_042647_change_time_to_utc::Migration),
             Box::new(m20251211_142132_jwks::Migration),
+            Box::new(m20251222_073639_form_submission::Migration),
+            Box::new(m20251223_134134_rbac_and_moddatetime::Migration),
         ]
     }
 }
