@@ -26,7 +26,7 @@ pub async fn create_test_app(mock_db: MockDatabase) -> Result<TestServer> {
         .set(&cache_key, session_json, None, None, false)
         .await?;
 
-    let app = create_router(db, cache)?;
+    let app = create_router(db, cache, true)?;
 
     let mut server = TestServer::new(app).unwrap();
     let cookie = Cookie::build(("better-auth.session_token", fake_token))

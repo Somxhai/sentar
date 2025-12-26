@@ -43,10 +43,8 @@ async fn main() -> Result<()> {
     let db = create_database().await?;
     let cache = create_cache().await?;
 
-    // let jwks = get_jwks().await?;
-
     let app = create_router(
-        db, cache, // jwks
+        db, cache, false, // jwks
     )?;
     let port: u16 = std::env::var("PORT")
         .ok()
