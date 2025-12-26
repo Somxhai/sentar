@@ -49,7 +49,13 @@ pub mod helpers {
         }
     }
 
-    pub fn mock_form(id: Uuid, event_id: Uuid, title: &str, description: &str) -> form::Model {
+    pub fn mock_form(
+        id: Uuid,
+        event_id: Uuid,
+        title: &str,
+        description: &str,
+        user_id: &str,
+    ) -> form::Model {
         let now = mock_datetime();
         form::Model {
             id,
@@ -57,6 +63,8 @@ pub mod helpers {
             title: Some(title.to_string()),
             description: Some(description.to_string()),
             schema: None,
+            is_active: false,
+            updated_by: user_id.to_string(),
             settings: None,
             created_at: now,
             updated_at: now,
