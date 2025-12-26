@@ -5,34 +5,34 @@ use serde::{Deserialize, Serialize};
 
 #[sea_orm::model]
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "form")]
+#[sea_orm(table_name = "form_submission")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
-    pub event_id: Uuid,
-    #[sea_orm(column_type = "JsonBinary", nullable)]
-    pub schema: Option<Json>,
-    pub settings: Option<Json>,
-    pub title: Option<String>,
-    pub description: Option<String>,
-    pub created_at: DateTime,
-    pub updated_at: DateTime,
-    pub is_active: bool,
     #[sea_orm(column_type = "Text")]
-    pub updated_by: String,
+    pub respondent_id: String,
+    pub form_id: Uuid,
+    #[sea_orm(column_type = "JsonBinary")]
+    pub answer: Json,
+    pub submitted_at: DateTime,
+    pub updated_at: DateTime,
+    #[sea_orm(column_type = "Text")]
+    pub status: String,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub user_agent: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub ip_address: Option<String>,
     #[sea_orm(
         belongs_to,
-        from = "event_id",
+        from = "form_id",
         to = "id",
-        on_update = "Cascade",
+        on_update = "NoAction",
         on_delete = "Cascade"
     )]
-    pub event: HasOne<super::event::Entity>,
-    #[sea_orm(has_many)]
-    pub form_submissions: HasMany<super::form_submission::Entity>,
+    pub form: HasOne<super::form::Entity>,
     #[sea_orm(
         belongs_to,
-        from = "updated_by",
+        from = "respondent_id",
         to = "id",
         on_update = "NoAction",
         on_delete = "Cascade"

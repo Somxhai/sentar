@@ -19,6 +19,10 @@ pub struct Model {
     #[sea_orm(has_many)]
     pub accounts: HasMany<super::account::Entity>,
     #[sea_orm(has_many)]
+    pub forms: HasMany<super::form::Entity>,
+    #[sea_orm(has_many)]
+    pub form_submissions: HasMany<super::form_submission::Entity>,
+    #[sea_orm(has_many)]
     pub reservations: HasMany<super::reservation::Entity>,
     #[sea_orm(has_many)]
     pub sessions: HasMany<super::session::Entity>,

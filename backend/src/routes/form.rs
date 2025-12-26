@@ -1,8 +1,11 @@
 use crate::app::AppState;
+use crate::dto::cache::SessionCache;
 use crate::dto::form::{FormRequest, FormResponse, UpdateFormRequest};
 use crate::dto::workspace::DeleteResponse;
 use crate::error::AppError;
 use crate::model::form;
+use axum::Extension;
+use axum::response::{IntoResponse, Response};
 use axum::{
     Json,
     extract::{Path, Query, State},
@@ -13,7 +16,11 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 use uuid::Uuid;
 
 pub fn form_routes() -> OpenApiRouter<AppState> {
-    OpenApiRouter::new().routes(routes!(create_form, get_form, update_form, delete_form))
+    OpenApiRouter::new().routes(routes!(create_form, update_form, delete_form))
+}
+
+pub fn public_form_routes() -> OpenApiRouter<AppState> {
+    OpenApiRouter::new().routes(routes!(get_form))
 }
 
 #[utoipa::path(
@@ -21,23 +28,26 @@ pub fn form_routes() -> OpenApiRouter<AppState> {
     path = "/form",
     tag = "form",
     request_body = FormRequest,
-    responses((status = 200, body = FormResponse))
+    responses((status = 201, body = FormResponse))
 )]
 async fn create_form(
     State(app_state): State<AppState>,
+    Extension(extension): Extension<SessionCache>,
     Json(body): Json<FormRequest>,
-) -> Result<Json<FormResponse>, AppError> {
+) -> Result<Response, AppError> {
     let form = form::ActiveModel {
         event_id: Set(body.event_id),
         title: Set(body.title),
         description: Set(body.description),
         schema: Set(body.schema),
         settings: Set(body.settings),
+        is_active: Set(true),
+        updated_by: Set(extension.user_id),
         ..Default::default()
     };
 
     let form = form.insert(&*app_state.db).await?;
-    Ok(Json(form.into()))
+    Ok(FormResponse::from(form).into_response())
 }
 
 #[utoipa::path(
@@ -59,7 +69,7 @@ async fn get_form(
 }
 
 #[utoipa::path(
-    put,
+    patch,
     path = "/form",
     tag = "form",
     request_body = UpdateFormRequest,

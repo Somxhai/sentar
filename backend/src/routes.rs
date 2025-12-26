@@ -5,6 +5,7 @@ use crate::{app::AppState, error::AppError};
 
 pub mod event;
 pub mod form;
+pub mod form_submission;
 pub mod section;
 pub mod workspace;
 
