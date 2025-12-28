@@ -1,14 +1,13 @@
 use eyre::Result;
 use fred::{clients, mocks::SimpleMap, prelude::*};
-use std::{env, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
+
+use crate::env_vars::AppConfig;
 
 pub async fn create_cache() -> Result<clients::Pool> {
-    let pool_size = env::var("REDIS_POOL_SIZE")
-        .ok()
-        .and_then(|v| v.parse::<usize>().ok())
-        .unwrap_or(8);
-    let redis_url = env::var("REDIS_URL").expect("Failed to create redis config from url");
-    let config = Config::from_url(&redis_url).expect("Failed to create redis config from url");
+    let pool_size = AppConfig::global().redis_pool_size.unwrap_or(8);
+    let redis_url = &AppConfig::global().redis_url;
+    let config = Config::from_url(redis_url).expect("Failed to create redis config from url");
     let pool = Builder::from_config(config)
         .with_connection_config(|config| {
             config.connection_timeout = Duration::from_secs(10);

@@ -1,5 +1,6 @@
 use crate::{
-    middleware::auth::auth_session_guard,
+    env_vars::AppConfig,
+    middleware::{auth::auth_session_guard, connect_info::retrieve_connection_info_middleware},
     routes::{
         event::{event_routes, public_event_routes},
         form::{form_routes, public_form_routes},
@@ -8,13 +9,17 @@ use crate::{
         workspace::{workspace_routes, workspaces::workspaces_routes},
     },
 };
-use axum::{Router, http::HeaderValue, middleware::from_fn_with_state, routing::get};
+use axum::{
+    Router,
+    http::HeaderValue,
+    middleware::{from_fn, from_fn_with_state},
+    routing::get,
+};
 use axum_prometheus::{PrometheusMetricLayer, metrics_exporter_prometheus::PrometheusHandle};
 use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use eyre::Result;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::{
-    env,
     sync::{Arc, OnceLock},
     time::Duration,
 };
@@ -40,7 +45,7 @@ impl AppState {
 }
 
 pub async fn create_database() -> Result<DatabaseConnection> {
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let database_url = &AppConfig::global().database_url;
 
     let mut opt = ConnectOptions::new(database_url);
     opt.max_connections(100)
@@ -120,6 +125,10 @@ pub fn create_router(
     if !is_test {
         router = router.layer(GovernorLayer::new(Arc::new(governor_conf)))
     }
+
+    router = router
+        .layer(from_fn(retrieve_connection_info_middleware))
+        .layer(AppConfig::global().ip_source.clone().into_extension());
 
     let (router, api): (Router, utoipa::openapi::OpenApi) = router.split_for_parts();
 

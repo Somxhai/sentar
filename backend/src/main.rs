@@ -13,8 +13,11 @@ use tracing::info;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
+use crate::env_vars::AppConfig;
+
 pub mod app;
 pub mod dto;
+pub mod env_vars;
 pub mod error;
 pub mod middleware;
 pub mod model;
@@ -25,8 +28,9 @@ pub mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    info!("Initializing app");
     dotenv::dotenv().ok();
+    AppConfig::init();
+    info!("Initializing app");
     global::set_text_map_propagator(TraceContextPropagator::new());
     let (toki_layer, task) = create_logging_provider()?;
     tokio::spawn(task);
@@ -46,15 +50,12 @@ async fn main() -> Result<()> {
     let app = create_router(
         db, cache, false, // jwks
     )?;
-    let port: u16 = std::env::var("PORT")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(3000);
+    let port: u16 = AppConfig::global().port.unwrap_or(3000);
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
 
     info!("Server runs on {}", addr);
     axum_server::bind(addr)
-        .serve(app.into_make_service())
+        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
         .await
         .unwrap_or_else(|err| error!("Cannot start the server: {}", err));
     Ok(())
