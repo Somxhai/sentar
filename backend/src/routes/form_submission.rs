@@ -1,5 +1,6 @@
 use crate::app::AppState;
 use crate::dto::cache::SessionCache;
+use crate::dto::connection_info::ConnectionInfo;
 use crate::dto::form::submission::{FormSubmit, FormSubmitResponse};
 use crate::error::AppError;
 use axum::Extension;
@@ -28,6 +29,7 @@ pub fn form_submission_routes() -> OpenApiRouter<AppState> {
 )]
 async fn submit_form(
     Extension(user_cache): Extension<SessionCache>,
+    Extension(connection_info): Extension<ConnectionInfo>,
     State(app_state): State<AppState>,
     Path(form_id): Path<Uuid>,
     Json(body): Json<FormSubmit>,
@@ -35,7 +37,7 @@ async fn submit_form(
     let user_id = user_cache.user_id;
     let db = &*app_state.db;
     let submission = body
-        .submit(db, user_id, form_id)
+        .submit(db, user_id, form_id, connection_info)
         .await
         .map_err(|_| AppError::Internal)?;
     Ok(FormSubmitResponse::from(submission).into_response())
