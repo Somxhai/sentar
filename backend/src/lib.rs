@@ -5,4 +5,5 @@ pub mod error;
 mod middleware;
 pub mod model;
 pub mod routes;
+mod service;
 pub mod utils;
