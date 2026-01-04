@@ -33,6 +33,7 @@ use tower_governor::{
 use tower_http::cors::CorsLayer;
 use utoipa_axum::{router::OpenApiRouter, routes};
 use utoipa_scalar::{Scalar, Servable};
+use uuid::Uuid;
 
 pub mod cache;
 pub mod db;
@@ -42,7 +43,7 @@ pub mod web_socket;
 pub struct AppState {
     pub db: Arc<DatabaseConnection>,
     pub cache: Arc<fred::prelude::Pool>,
-    pub rooms: Arc<DashMap<String, broadcast::Sender<ServerEvent>>>,
+    pub rooms: Arc<DashMap<Uuid, broadcast::Sender<ServerEvent>>>,
 }
 
 impl AppState {
