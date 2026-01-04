@@ -14,3 +14,4 @@ pub use super::session::Entity as Session;
 pub use super::user::Entity as User;
 pub use super::verification::Entity as Verification;
 pub use super::workspace::Entity as Workspace;
+pub use super::workspace_member::Entity as WorkspaceMember;

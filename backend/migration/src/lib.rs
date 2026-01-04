@@ -8,6 +8,9 @@ mod m20251207_042647_change_time_to_utc;
 mod m20251211_142132_jwks;
 mod m20251222_073639_form_submission;
 mod m20251223_134134_rbac_and_moddatetime;
+mod m20251231_065451_add_check_for_event_object;
+mod m20260104_122934_add_check_for_reservation;
+mod m20260104_141735_add_z_to_event_object_position;
 
 pub struct Migrator;
 
@@ -23,6 +26,9 @@ impl MigratorTrait for Migrator {
             Box::new(m20251211_142132_jwks::Migration),
             Box::new(m20251222_073639_form_submission::Migration),
             Box::new(m20251223_134134_rbac_and_moddatetime::Migration),
+            Box::new(m20251231_065451_add_check_for_event_object::Migration),
+            Box::new(m20260104_122934_add_check_for_reservation::Migration),
+            Box::new(m20260104_141735_add_z_to_event_object_position::Migration),
         ]
     }
 }

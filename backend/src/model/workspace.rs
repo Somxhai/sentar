@@ -23,6 +23,8 @@ pub struct Model {
         on_delete = "Cascade"
     )]
     pub user: HasOne<super::user::Entity>,
+    #[sea_orm(has_many)]
+    pub workspace_members: HasMany<super::workspace_member::Entity>,
 }
 
 impl ActiveModelBehavior for ActiveModel {}

@@ -17,6 +17,8 @@ pub struct Model {
     pub expires_at: Option<DateTime>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
+    pub approved_by: Option<String>,
+    pub approved_at: Option<DateTime>,
     #[sea_orm(
         belongs_to,
         from = "event_id",
@@ -29,12 +31,22 @@ pub struct Model {
     pub reservation_items: HasMany<super::reservation_item::Entity>,
     #[sea_orm(
         belongs_to,
+        relation_enum = "User2",
         from = "user_id",
         to = "id",
         on_update = "Cascade",
         on_delete = "Cascade"
     )]
-    pub user: HasOne<super::user::Entity>,
+    pub user_2: HasOne<super::user::Entity>,
+    #[sea_orm(
+        belongs_to,
+        relation_enum = "User1",
+        from = "approved_by",
+        to = "id",
+        on_update = "NoAction",
+        on_delete = "SetNull"
+    )]
+    pub user_1: HasOne<super::user::Entity>,
 }
 
 impl ActiveModelBehavior for ActiveModel {}

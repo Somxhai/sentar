@@ -18,6 +18,8 @@ pub struct Model {
     pub rotation: f64,
     pub created_at: DateTime,
     pub updated_at: DateTime,
+    #[sea_orm(column_type = "Double")]
+    pub position_z: f64,
     #[sea_orm(
         belongs_to,
         from = "event_object_id",
