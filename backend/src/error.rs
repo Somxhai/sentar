@@ -25,6 +25,9 @@ pub enum AppError {
 
     #[error("Internal server error")]
     Internal,
+
+    #[error("Database Conflict: {0}")]
+    Conflict(String),
 }
 
 #[derive(Serialize)]
@@ -50,6 +53,7 @@ impl IntoResponse for AppError {
             AppError::Unauthorized => (StatusCode::UNAUTHORIZED, "Unauthorized", None),
             AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, "Bad request", Some(msg)),
             AppError::Validation(msg) => (StatusCode::BAD_REQUEST, "Validation error", Some(msg)),
+            AppError::Conflict(msg) => (StatusCode::CONFLICT, "Conflict", Some(msg)),
             AppError::Internal => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal server error",
