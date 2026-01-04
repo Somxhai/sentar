@@ -1,8 +1,8 @@
 use std::net::SocketAddr;
 
 use app::cache::create_cache;
-use app::create_database;
 use app::create_router;
+use app::db::create_database;
 use eyre::Result;
 use observe::create_logging_provider;
 use observe::create_oltp_provider;
@@ -22,8 +22,8 @@ pub mod error;
 pub mod middleware;
 pub mod model;
 mod observe;
-pub mod prometheus;
 pub mod routes;
+pub mod service;
 pub mod utils;
 
 #[tokio::main]
