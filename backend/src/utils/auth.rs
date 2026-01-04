@@ -1,57 +1,72 @@
-// use std::env;
-//
-// use chrono::{DateTime, Utc};
-// use eyre::Result;
-// use jsonwebtoken::{TokenData, Validation, decode, decode_header, jwk::JwkSet};
-// use reqwest;
-// use serde::{Deserialize, Serialize};
-//
-// #[derive(Debug, Clone, Serialize, Deserialize)]
-// #[serde(rename_all = "camelCase")]
-// pub struct Claims {
-//     pub iat: i64,
-//     pub name: String,
-//     pub email: String,
-//     pub email_verified: bool,
-//     pub image: Option<String>,
-//     pub created_at: DateTime<Utc>,
-//     pub updated_at: DateTime<Utc>,
-//     pub id: String,
-//     pub sub: String,
-//     pub exp: usize,
-//     pub iss: String,
-//     pub aud: String,
-// }
-//
-// pub async fn get_jwks() -> Result<JwkSet> {
-//     let jwks_url = env::var("JWT_ISSUER")? + "/api/auth/jwks";
-//     let jwks_text = reqwest::get(&jwks_url).await?.text().await?;
-//     let jwks: JwkSet = serde_json::from_str(&jwks_text)?;
-//     Ok(jwks)
-// }
-//
-// pub fn create_jwt_verifier(token: &str, jwks: &JwkSet) -> eyre::Result<TokenData<Claims>> {
-//     use eyre::Context;
-//     use eyre::eyre;
-//
-//     let header = decode_header(token).wrap_err("invalid JWT header")?;
-//
-//     let kid = header
-//         .kid
-//         .ok_or_else(|| eyre!("missing kid in JWT header"))?;
-//     let jwk = jwks
-//         .find(&kid)
-//         .ok_or_else(|| eyre!("no JWK found for kid {kid}"))?;
-//
-//     let issuer = env::var("JWT_ISSUER").wrap_err("JWT_ISSUER env missing")?;
-//
-//     let mut validation = Validation::new(header.alg);
-//     validation.set_issuer(std::slice::from_ref(&issuer));
-//     validation.set_audience(&[issuer]);
-//
-//     let key: jsonwebtoken::DecodingKey = jwk.try_into().wrap_err("invalid JWK")?;
-//
-//     let decoded = decode::<Claims>(token, &key, &validation).wrap_err("JWT validation failed")?;
-//
-//     Ok(decoded)
-// }
+use chrono::NaiveDateTime;
+use fred::{
+    prelude::{KeysInterface, Pool},
+    types::Expiration,
+};
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
+use tracing::{error, warn};
+
+use crate::{dto::cache::SessionCache, error::AppError, model::session};
+
+pub async fn validate_token(
+    token: &str,
+    db: &DatabaseConnection,
+    cache: &Pool,
+) -> Result<SessionCache, AppError> {
+    let redis_key = format!("session:{}", token);
+
+    let cached_session = match cache.get::<Option<String>, _>(&redis_key).await {
+        Ok(Some(json)) => serde_json::from_str::<SessionCache>(&json).ok(),
+        Ok(None) => None,
+        Err(e) => {
+            warn!("Redis connection error: {}", e);
+            None
+        }
+    };
+
+    if let Some(session_data) = cached_session
+        && session_data.expires_at > chrono::Utc::now().naive_utc()
+    {
+        return Ok(session_data);
+    }
+
+    let session = session::Entity::find()
+        .filter(session::Column::Token.eq(token))
+        .filter(session::Column::ExpiresAt.gt(chrono::Utc::now()))
+        .one(db)
+        .await?
+        .ok_or(AppError::Unauthorized)?;
+
+    let session_cache = SessionCache {
+        user_id: session.user_id,
+        expires_at: session.expires_at,
+    };
+    let session_cache_clone = session_cache.clone();
+
+    let cache = cache.clone();
+    let _save_to_cache = tokio::spawn(async move {
+        let ttl = calculate_ttl(session_cache_clone.expires_at);
+        match serde_json::to_string(&session_cache_clone) {
+            Ok(json_str) => {
+                let result: Result<(), _> = cache
+                    .set(&redis_key, json_str, Some(ttl), None, false)
+                    .await;
+                if let Err(e) = result {
+                    error!("Failed to cache session: {}", e);
+                }
+            }
+            Err(e) => {
+                error!("Session serialization failed: {}", e);
+            }
+        };
+    });
+
+    Ok(session_cache)
+}
+
+fn calculate_ttl(expires_at: NaiveDateTime) -> Expiration {
+    let ttl = (expires_at - chrono::Utc::now().naive_utc())
+        .num_seconds()
+        .max(0);
+    Expiration::EX(ttl.min(5 * 60)) // Cap at 5 minutes
+}
