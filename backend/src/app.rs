@@ -1,4 +1,5 @@
 use crate::{
+    app::web_socket::ServerEvent,
     env_vars::AppConfig,
     middleware::{auth::auth_session_guard, connect_info::retrieve_connection_info_middleware},
     routes::{
@@ -6,6 +7,7 @@ use crate::{
         form::{form_routes, public_form_routes},
         form_submission::form_submission_routes,
         section::section_routes,
+        websocket::websocket_handler,
         workspace::{workspace_routes, workspaces::workspaces_routes},
     },
 };
@@ -13,16 +15,18 @@ use axum::{
     Router,
     http::HeaderValue,
     middleware::{from_fn, from_fn_with_state},
-    routing::get,
+    routing::{any, get},
 };
 use axum_prometheus::{PrometheusMetricLayer, metrics_exporter_prometheus::PrometheusHandle};
 use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
+use dashmap::DashMap;
 use eyre::Result;
-use sea_orm::{ConnectOptions, Database, DatabaseConnection};
+use sea_orm::DatabaseConnection;
 use std::{
     sync::{Arc, OnceLock},
     time::Duration,
 };
+use tokio::sync::broadcast;
 use tower_governor::{
     GovernorLayer, governor::GovernorConfigBuilder, key_extractor::SmartIpKeyExtractor,
 };
@@ -31,34 +35,22 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 use utoipa_scalar::{Scalar, Servable};
 
 pub mod cache;
+pub mod db;
+pub mod web_socket;
 
 #[derive(Clone)]
 pub struct AppState {
     pub db: Arc<DatabaseConnection>,
     pub cache: Arc<fred::prelude::Pool>,
+    pub rooms: Arc<DashMap<String, broadcast::Sender<ServerEvent>>>,
 }
 
 impl AppState {
     pub fn new(db: Arc<DatabaseConnection>, cache: Arc<fred::prelude::Pool>) -> Self {
-        AppState { db, cache }
+        let rooms = Arc::new(DashMap::new());
+
+        AppState { db, cache, rooms }
     }
-}
-
-pub async fn create_database() -> Result<DatabaseConnection> {
-    let database_url = &AppConfig::global().database_url;
-
-    let mut opt = ConnectOptions::new(database_url);
-    opt.max_connections(100)
-        .min_connections(5)
-        .connect_timeout(Duration::from_secs(5))
-        .acquire_timeout(Duration::from_secs(8))
-        .idle_timeout(Duration::from_mins(8))
-        .max_lifetime(Duration::from_mins(30))
-        .sqlx_logging(true)
-        .set_schema_search_path("public"); // Setting default PostgreSQL schema
-
-    let db = Database::connect(opt).await?;
-    Ok(db)
 }
 
 static PROMETHEUS: OnceLock<(PrometheusMetricLayer, PrometheusHandle)> = OnceLock::new();
@@ -86,7 +78,7 @@ pub fn create_router(
     std::thread::spawn(move || {
         loop {
             std::thread::sleep(interval);
-            tracing::info!("rate limiting storage size: {}", governor_limiter.len());
+            // tracing::info!("rate limiting storage size: {}", governor_limiter.len());
             governor_limiter.retain_recent();
         }
     });
@@ -113,14 +105,13 @@ pub fn create_router(
         .merge(form_submission_routes())
         .layer(from_fn_with_state(app_state.clone(), auth_session_guard));
 
+    let ws_router = OpenApiRouter::<AppState>::new().route("/ws", any(websocket_handler));
+
     // Build router and OpenAPI spec
     let mut router = public
         .merge(protected)
-        .layer(prometheus_layer)
-        .layer(OtelInResponseLayer) // Log
-        .layer(OtelAxumLayer::default()) // Trace
-        .with_state(app_state.clone())
-        .layer(cors);
+        .merge(ws_router)
+        .with_state(app_state.clone());
 
     if !is_test {
         router = router.layer(GovernorLayer::new(Arc::new(governor_conf)))
@@ -128,7 +119,11 @@ pub fn create_router(
 
     router = router
         .layer(from_fn(retrieve_connection_info_middleware))
-        .layer(AppConfig::global().ip_source.clone().into_extension());
+        .layer(AppConfig::global().ip_source.clone().into_extension())
+        .layer(prometheus_layer)
+        .layer(OtelInResponseLayer) // Log
+        .layer(OtelAxumLayer::default())
+        .layer(cors);
 
     let (router, api): (Router, utoipa::openapi::OpenApi) = router.split_for_parts();
 
