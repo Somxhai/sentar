@@ -12,8 +12,8 @@ pub async fn create_database() -> eyre::Result<DatabaseConnection> {
         .min_connections(5)
         .connect_timeout(Duration::from_secs(5))
         .acquire_timeout(Duration::from_secs(8))
-        .idle_timeout(Duration::from_mins(8))
-        .max_lifetime(Duration::from_mins(30))
+        .idle_timeout(Duration::from_secs(8 * 60))
+        .max_lifetime(Duration::from_secs(30 * 60))
         .sqlx_logging(true)
         .set_schema_search_path("public"); // Setting default PostgreSQL schema
 
