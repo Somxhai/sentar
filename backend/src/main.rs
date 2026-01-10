@@ -30,7 +30,6 @@ pub mod utils;
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     AppConfig::init();
-    info!("Initializing app");
     global::set_text_map_propagator(TraceContextPropagator::new());
     let (toki_layer, task) = create_logging_provider()?;
     tokio::spawn(task);
@@ -41,15 +40,12 @@ async fn main() -> Result<()> {
         .with(otel_layer)
         .with(toki_layer)
         .with(tracing_subscriber::fmt::Layer::new())
-        // .with(EnvFilter::new("debug"))
         .init();
 
     let db = create_database().await?;
     let cache = create_cache().await?;
 
-    let app = create_router(
-        db, cache, false, // jwks
-    )?;
+    let app = create_router(db, cache, false)?;
     let port: u16 = AppConfig::global().port.unwrap_or(3000);
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
 

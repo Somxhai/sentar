@@ -2,7 +2,6 @@ use backend::dto::workspace::{DeleteResponse, RenameRequest, WorkspaceRequest, W
 use eyre::Result;
 use sea_orm::{DatabaseBackend, MockDatabase, MockExecResult};
 use serde_json::json;
-use std::vec;
 use uuid::Uuid;
 mod common;
 use crate::common::{helpers::mock_workspace, server::create_test_app};
@@ -11,13 +10,13 @@ async fn get_workspaces() -> Result<()> {
     let id = Uuid::new_v4();
     let id2 = Uuid::new_v4();
     let user_id = "user_test_nod_prod";
-    let mock_data = vec![
+    let mock_data = [
         mock_workspace(id, "test_1", user_id),
         mock_workspace(id2, "test_2", user_id),
     ];
 
     let mock_db =
-        MockDatabase::new(DatabaseBackend::Postgres).append_query_results(vec![mock_data.clone()]);
+        MockDatabase::new(DatabaseBackend::Postgres).append_query_results([mock_data.clone()]);
 
     let server = create_test_app(mock_db).await?;
     let response = server
@@ -34,8 +33,8 @@ async fn create_workspace() -> Result<()> {
     let user_id = "user_test_nod_prod";
     let name = "test1";
     let expected = mock_workspace(id, name, user_id);
-    let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
-        .append_query_results(vec![vec![expected.clone()]]);
+    let mock_db =
+        MockDatabase::new(DatabaseBackend::Postgres).append_query_results([[expected.clone()]]);
     let server = create_test_app(mock_db).await?;
     let response = server
         .post("/workspace")
@@ -52,9 +51,9 @@ async fn create_workspace() -> Result<()> {
 async fn delete_workspace() -> Result<()> {
     let id = Uuid::new_v4();
     let user_id = "user_test_nod_prod";
-    let mock_data = vec![mock_workspace(id, "test_1", user_id)];
+    let mock_data = [mock_workspace(id, "test_1", user_id)];
     let mock_db =
-        MockDatabase::new(DatabaseBackend::Postgres).append_exec_results(vec![MockExecResult {
+        MockDatabase::new(DatabaseBackend::Postgres).append_exec_results([MockExecResult {
             rows_affected: 1,
             last_insert_id: 0, // Not used, but required by the struct
         }]);
@@ -79,8 +78,8 @@ async fn rename_workspaces() -> Result<()> {
     let mock_data = mock_workspace(id, "test_1", user_id);
     let expected = mock_workspace(id, rename, user_id);
     let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
-        .append_query_results(vec![vec![mock_data.clone()]])
-        .append_query_results(vec![vec![expected.clone()]]);
+        .append_query_results([[mock_data.clone()]])
+        .append_query_results([[expected.clone()]]);
     let server = create_test_app(mock_db).await?;
     let response = server
         .put(format!("/workspace/{}", id).as_str())

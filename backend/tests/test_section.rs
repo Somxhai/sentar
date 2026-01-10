@@ -18,8 +18,8 @@ async fn get_section() -> Result<()> {
 
     let mock_data = mock_section(id, title, event_id, price);
 
-    let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
-        .append_query_results(vec![vec![mock_data.clone()]]);
+    let mock_db =
+        MockDatabase::new(DatabaseBackend::Postgres).append_query_results([[mock_data.clone()]]);
 
     let server = create_test_app(mock_db).await?;
 
@@ -39,8 +39,8 @@ async fn create_section() -> Result<()> {
 
     let expected = mock_section(id, title, event_id, price);
 
-    let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
-        .append_query_results(vec![vec![expected.clone()]]);
+    let mock_db =
+        MockDatabase::new(DatabaseBackend::Postgres).append_query_results([[expected.clone()]]);
 
     let server = create_test_app(mock_db).await?;
 
@@ -63,7 +63,7 @@ async fn delete_section() -> Result<()> {
     let id = Uuid::new_v4();
 
     let mock_db =
-        MockDatabase::new(DatabaseBackend::Postgres).append_exec_results(vec![MockExecResult {
+        MockDatabase::new(DatabaseBackend::Postgres).append_exec_results([MockExecResult {
             rows_affected: 1,
             last_insert_id: 0,
         }]);
@@ -90,8 +90,8 @@ async fn update_section() -> Result<()> {
     let mock_new = mock_section(id, new_title, event_id, price);
 
     let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
-        .append_query_results(vec![vec![mock_old.clone()]])
-        .append_query_results(vec![vec![mock_new.clone()]]);
+        .append_query_results([[mock_old.clone()]])
+        .append_query_results([[mock_new.clone()]]);
 
     let server = create_test_app(mock_db).await?;
 

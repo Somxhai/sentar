@@ -52,7 +52,10 @@ pub async fn create_test_app(mock_db: MockDatabase) -> Result<TestServer> {
         },
     ));
 
-    let mut server = TestServer::new(app_with_mock_ip).unwrap();
+    let mut server = TestServer::builder()
+        .http_transport()
+        .build(app_with_mock_ip)
+        .unwrap();
     let cookie = Cookie::build(("better-auth.session_token", fake_token))
         .path("/")
         .http_only(true)

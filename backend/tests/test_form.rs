@@ -16,8 +16,8 @@ async fn get_form() -> Result<()> {
     let title = "Test Form";
     let description = "Test Description";
     let mock_data = mock_form(id, event_id, title, description, user_id);
-    let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
-        .append_query_results(vec![vec![mock_data.clone()]]);
+    let mock_db =
+        MockDatabase::new(DatabaseBackend::Postgres).append_query_results([[mock_data.clone()]]);
     let server = create_test_app(mock_db).await?;
     let response = server.get(format!("/form/{}", id).as_str()).await;
     response.assert_status_ok();
@@ -33,8 +33,8 @@ async fn create_form() -> Result<()> {
     let user_id = "my-test-user";
     let description = "Test Description";
     let expected = mock_form(id, event_id, title, description, user_id);
-    let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
-        .append_query_results(vec![vec![expected.clone()]]);
+    let mock_db =
+        MockDatabase::new(DatabaseBackend::Postgres).append_query_results([[expected.clone()]]);
     let server = create_test_app(mock_db).await?;
     let response = server
         .post("/form")
@@ -55,7 +55,7 @@ async fn create_form() -> Result<()> {
 async fn delete_form() -> Result<()> {
     let id = Uuid::new_v4();
     let mock_db =
-        MockDatabase::new(DatabaseBackend::Postgres).append_exec_results(vec![MockExecResult {
+        MockDatabase::new(DatabaseBackend::Postgres).append_exec_results([MockExecResult {
             rows_affected: 1,
             last_insert_id: 0,
         }]);
@@ -81,8 +81,8 @@ async fn update_form() -> Result<()> {
     let mock_old = mock_form(id, event_id, old_title, description, user_id);
     let mock_new = mock_form(id, event_id, new_title, description, new_user_id);
     let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
-        .append_query_results(vec![vec![mock_old.clone()]])
-        .append_query_results(vec![vec![mock_new.clone()]]);
+        .append_query_results([[mock_old.clone()]])
+        .append_query_results([[mock_new.clone()]]);
     let server = create_test_app(mock_db).await?;
     let response = server
         .patch("/form")

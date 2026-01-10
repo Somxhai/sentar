@@ -44,8 +44,8 @@ async fn submit_form() -> Result<()> {
     };
 
     let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
-        .append_query_results(vec![vec![expected_form.clone()]])
-        .append_query_results(vec![vec![expected_submission.clone()]]);
+        .append_query_results([[expected_form.clone()]])
+        .append_query_results([[expected_submission.clone()]]);
 
     let server = create_test_app(mock_db).await?;
     let response = server

@@ -273,10 +273,12 @@ checksum = "3290e73c56c5cc4701cdd7d46b9ced1b4bd61c7e9f9c769a9e9e87ff617d75d2"
 dependencies = [
  "anyhow",
  "axum",
+ "base64",
  "bytes",
  "bytesize",
  "cookie",
  "expect-json",
+ "futures-util",
  "http",
  "http-body-util",
  "hyper",
@@ -290,8 +292,10 @@ dependencies = [
  "serde_urlencoded",
  "smallvec",
  "tokio",
+ "tokio-tungstenite",
  "tower",
  "url",
+ "uuid",
 ]
 
 [[package]]
