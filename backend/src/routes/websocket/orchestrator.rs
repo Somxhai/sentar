@@ -68,9 +68,11 @@ pub async fn handle_command(
             let seat_manager = UserSeatManagement::new(db, session.user_id);
 
             if let Err(e) = seat_manager.release(seat_id).await {
+                error!("Release seat error: {}", e);
                 return ActionResult::Error {
                     request_id,
                     code: "500".into(),
+                    // message: "Something went wrong with releasing seat".into(),
                     message: e.to_string(),
                 };
             }
