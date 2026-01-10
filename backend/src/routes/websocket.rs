@@ -5,7 +5,10 @@ use crate::{
         client_identity::ClientIdentity, workspace_role::WorkspaceRole, ws_message::WSMessage,
     },
 };
-use axum::extract::{Path, Query, State, WebSocketUpgrade, ws::Message};
+use axum::{
+    extract::{Path, Query, State, WebSocketUpgrade, ws::Message},
+    response::Response,
+};
 use sea_orm::{EntityTrait, QuerySelect};
 use tokio::sync::broadcast;
 use tracing::{error, info, warn};
@@ -26,7 +29,6 @@ mod orchestrator;
 
 #[derive(serde::Deserialize)]
 pub struct WsParams {
-    pub event_id: Uuid,
     pub token: Option<String>,
 }
 
@@ -35,7 +37,7 @@ pub async fn websocket_handler(
     ws: WebSocketUpgrade,
     State(state): State<AppState>,
     Query(params): Query<WsParams>,
-) -> Result<(), AppError> {
+) -> Result<Response, AppError> {
     let identity = if let Some(token) = params.token {
         match validate_token(&token, &state.db, &state.cache).await {
             Ok(session) => ClientIdentity::Authenticated(session),
@@ -70,9 +72,7 @@ pub async fn websocket_handler(
         crate::service::workspace_role::WorkspaceRole::Guest
     };
 
-    let _ =
-        ws.on_upgrade(move |socket| socket_handler(socket, state, params.event_id, identity, role));
-    Ok(())
+    Ok(ws.on_upgrade(move |socket| socket_handler(socket, state, event_id, identity, role)))
 }
 
 pub async fn socket_handler(

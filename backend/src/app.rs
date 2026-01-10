@@ -106,7 +106,8 @@ pub fn create_router(
         .merge(form_submission_routes())
         .layer(from_fn_with_state(app_state.clone(), auth_session_guard));
 
-    let ws_router = OpenApiRouter::<AppState>::new().route("/ws", any(websocket_handler));
+    let ws_router =
+        OpenApiRouter::<AppState>::new().route("/ws/{event_id}", any(websocket_handler));
 
     // Build router and OpenAPI spec
     let mut router = public
