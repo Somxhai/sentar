@@ -17,8 +17,8 @@ async fn get_event() -> Result<()> {
 
     let mock_data = mock_event(id, title, workspace_id);
 
-    let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
-        .append_query_results(vec![vec![mock_data.clone()]]);
+    let mock_db =
+        MockDatabase::new(DatabaseBackend::Postgres).append_query_results([[mock_data.clone()]]);
 
     let server = create_test_app(mock_db).await?;
 
@@ -39,8 +39,8 @@ async fn create_event() -> Result<()> {
 
     let expected = mock_event(id, title, workspace_id);
 
-    let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
-        .append_query_results(vec![vec![expected.clone()]]);
+    let mock_db =
+        MockDatabase::new(DatabaseBackend::Postgres).append_query_results([[expected.clone()]]);
 
     let server = create_test_app(mock_db).await?;
 
@@ -67,7 +67,7 @@ async fn delete_event() -> Result<()> {
     let id = Uuid::new_v4();
 
     let mock_db =
-        MockDatabase::new(DatabaseBackend::Postgres).append_exec_results(vec![MockExecResult {
+        MockDatabase::new(DatabaseBackend::Postgres).append_exec_results([MockExecResult {
             rows_affected: 1,
             last_insert_id: 0,
         }]);
@@ -95,8 +95,8 @@ async fn update_event() -> Result<()> {
     let mock_new = mock_event(id, new_title, workspace_id);
 
     let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
-        .append_query_results(vec![vec![mock_old.clone()]])
-        .append_query_results(vec![vec![mock_new.clone()]]);
+        .append_query_results([[mock_old.clone()]])
+        .append_query_results([[mock_new.clone()]]);
 
     let server = create_test_app(mock_db).await?;
 

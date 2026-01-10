@@ -1,8 +1,8 @@
 use crate::app::AppState;
-use crate::dto::event::{EventRequest, EventResponse, UpdateEventRequest};
+use crate::dto::event::{EventEntry, EventRequest, EventResponse, UpdateEventRequest};
 use crate::dto::workspace::DeleteResponse;
 use crate::error::AppError;
-use crate::model::event;
+use crate::model::{event, event_object, form};
 use axum::extract::{Path, Query};
 use axum::{Json, extract::State};
 use sea_orm::ActiveValue::Set;
@@ -14,6 +14,10 @@ use uuid::Uuid;
 
 pub fn event_routes() -> OpenApiRouter<AppState> {
     OpenApiRouter::new().routes(routes!(get_event, create_event, delete_event, update_event))
+}
+
+pub fn public_event_routes() -> OpenApiRouter<AppState> {
+    OpenApiRouter::new().routes(routes!(get_event_entry))
 }
 
 #[utoipa::path(
@@ -122,4 +126,32 @@ async fn update_event(
 
     let updated_event = event.update(&*app_state.db).await?;
     Ok(Json(EventResponse::from(updated_event)))
+}
+
+#[utoipa::path(
+    get,
+    path = "/event/{event_id}/entry",
+    tags = ["event", "public"],
+    params(
+        ("event_id" = Uuid, description="Event id when user entering the site.")
+    ),
+    responses((status = 200, body = EventEntry))
+)]
+async fn get_event_entry(
+    State(app_state): State<AppState>,
+    Path(event_id): Path<Uuid>,
+) -> Result<Json<EventEntry>, AppError> {
+    let super_event = event::Entity::load()
+        .with(event_object::Entity)
+        .with(form::Entity)
+        .one(&*app_state.db)
+        .await?
+        .ok_or_else(|| {
+            let msg = format!("Event {} not found.", event_id);
+            AppError::NotFound(msg)
+        })?;
+
+    let entry = EventEntry::from(super_event);
+
+    Ok(Json(entry))
 }
