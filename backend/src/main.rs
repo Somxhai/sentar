@@ -1,3 +1,4 @@
+use migration::{Migrator, MigratorTrait};
 use std::net::SocketAddr;
 
 use app::cache::create_cache;
@@ -43,6 +44,8 @@ async fn main() -> Result<()> {
         .init();
 
     let db = create_database().await?;
+
+    Migrator::up(&db, None).await?;
     let cache = create_cache().await?;
 
     let app = create_router(db, cache, false)?;
