@@ -516,6 +516,7 @@ dependencies = [
  "opentelemetry-otlp",
  "opentelemetry_sdk",
  "sea-orm",
+ "sea-query-sqlx",
  "serde",
  "serde_json",
  "thiserror 2.0.17",
@@ -3349,9 +3350,9 @@ dependencies = [
 
 [[package]]
 name = "sea-query-sqlx"
-version = "0.8.0-rc.9"
+version = "0.8.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68873fa1776b4c25a26e7679f8ee22332978c721168ec1b0b32b6583d5a9381d"
+checksum = "693f3ac3a10a228afaf3512b122cffc07c57b4269d233c7ff60571ebb4f0dd17"
 dependencies = [
  "chrono",
  "rust_decimal",
