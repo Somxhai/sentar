@@ -1,4 +1,4 @@
-use sea_orm_migration::{prelude::*, schema::*, sea_orm::Statement};
+use sea_orm_migration::{prelude::*, schema::*};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -8,10 +8,9 @@ impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let db = manager.get_connection();
 
-        db.execute(Statement::from_string(
-            db.get_database_backend(),
+        db.execute_unprepared(
             "UPDATE reservation SET status = 'on_hold' WHERE status NOT IN ('on_hold', 'canceled', 'confirmed', 'expired')"
-        )).await?;
+        ).await?;
         manager
             .alter_table(
                 Table::alter()
@@ -31,10 +30,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        db.execute(Statement::from_string(
-            db.get_database_backend(),
-            r#"ALTER TABLE "reservation" ADD CONSTRAINT "chk_status_valid" CHECK ("status" IN ('on_hold', 'canceled', 'confirmed', 'expired'))"#,
-        )).await?;
+        db.execute_unprepared(r#"ALTER TABLE "reservation" ADD CONSTRAINT "chk_status_valid" CHECK ("status" IN ('on_hold', 'canceled', 'confirmed', 'expired'))"#,).await?;
 
         Ok(())
     }
@@ -43,11 +39,8 @@ impl MigrationTrait for Migration {
         let db = manager.get_connection();
 
         // 1. Drop the constraint
-        db.execute(Statement::from_string(
-            db.get_database_backend(),
-            r#"ALTER TABLE "reservation" DROP CONSTRAINT "chk_status_valid""#,
-        ))
-        .await?;
+        db.execute_unprepared(r#"ALTER TABLE "reservation" DROP CONSTRAINT "chk_status_valid""#)
+            .await?;
 
         // 2. Revert column definition (if needed)
         manager
