@@ -49,6 +49,7 @@ async fn create_event(
     Json(body): Json<EventRequest>,
 ) -> Result<Json<EventResponse>, AppError> {
     let event = event::ActiveModel {
+        id: Set(Uuid::new_v4()),
         title: Set(body.title),
         workspace_id: Set(body.workspace_id),
         description: Set(body.description),
