@@ -8,7 +8,7 @@ impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let db = manager.get_connection();
 
-        db.execute(Statement::from_string(
+        db.execute_raw(Statement::from_string(
             db.get_database_backend(),
             "UPDATE reservation SET status = 'on_hold' WHERE status NOT IN ('on_hold', 'canceled', 'confirmed', 'expired')"
         )).await?;
@@ -31,7 +31,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        db.execute(Statement::from_string(
+        db.execute_raw(Statement::from_string(
             db.get_database_backend(),
             r#"ALTER TABLE "reservation" ADD CONSTRAINT "chk_status_valid" CHECK ("status" IN ('on_hold', 'canceled', 'confirmed', 'expired'))"#,
         )).await?;
@@ -43,7 +43,7 @@ impl MigrationTrait for Migration {
         let db = manager.get_connection();
 
         // 1. Drop the constraint
-        db.execute(Statement::from_string(
+        db.execute_raw(Statement::from_string(
             db.get_database_backend(),
             r#"ALTER TABLE "reservation" DROP CONSTRAINT "chk_status_valid""#,
         ))

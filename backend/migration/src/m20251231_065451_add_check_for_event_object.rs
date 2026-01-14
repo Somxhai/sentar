@@ -23,7 +23,7 @@ impl MigrationTrait for Migration {
 
         // We assume PostgreSQL based on the error.
         // If using MySQL, the syntax is slightly different (DROP CHECK vs DROP CONSTRAINT).
-        db.execute(Statement::from_string(
+        db.execute_raw(Statement::from_string(
             db.get_database_backend(),
             r#"ALTER TABLE "event_object" ADD CONSTRAINT "chk_status_valid" CHECK ("status" IN ('available', 'reserved'))"#,
         )).await?;
@@ -35,7 +35,7 @@ impl MigrationTrait for Migration {
         let db = manager.get_connection();
 
         // 1. Drop the constraint
-        db.execute(Statement::from_string(
+        db.execute_raw(Statement::from_string(
             db.get_database_backend(),
             r#"ALTER TABLE "event_object" DROP CONSTRAINT "chk_status_valid""#,
         ))
