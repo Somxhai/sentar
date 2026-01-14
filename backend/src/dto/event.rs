@@ -9,7 +9,7 @@ use crate::{
     model::{event, event_object},
 };
 
-#[derive(Serialize, Deserialize, PartialEq, ToSchema)]
+#[derive(Serialize, Deserialize, PartialEq, ToSchema, Default)]
 pub struct EventRequest {
     pub title: String,
     pub workspace_id: Uuid,
