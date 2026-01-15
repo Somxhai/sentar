@@ -11,6 +11,7 @@ mod m20251223_134134_rbac_and_moddatetime;
 mod m20251231_065451_add_check_for_event_object;
 mod m20260104_122934_add_check_for_reservation;
 mod m20260104_141735_add_z_to_event_object_position;
+mod m20260114_152506_frontend_request;
 
 pub struct Migrator;
 
@@ -29,6 +30,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20251231_065451_add_check_for_event_object::Migration),
             Box::new(m20260104_122934_add_check_for_reservation::Migration),
             Box::new(m20260104_141735_add_z_to_event_object_position::Migration),
+            Box::new(m20260114_152506_frontend_request::Migration),
         ]
     }
 }

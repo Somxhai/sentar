@@ -18,6 +18,7 @@ pub struct Model {
     pub ends_at: Option<DateTime>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
+    pub status: String,
     #[sea_orm(has_many)]
     pub event_objects: HasMany<super::event_object::Entity>,
     #[sea_orm(has_many)]

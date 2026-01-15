@@ -8,8 +8,6 @@ axum = {version="0.8.8", features=["ws", "macros"]}
 axum-server = "0.8.0"
 dotenv = "0.15.0"
 sea-orm = {version = "2.0.0-rc.28", features=["runtime-tokio-native-tls", "sqlx-postgres", "mock", "macros"]}
-# sea-query = "=1.0.0-rc.29"
-# sea-query-sqlx = "=0.8.0-rc.11"
 serde = {version = "1.0.228", features = ["derive"]}
 serde_json = "1.0.145"
 tracing = "0.1.41"

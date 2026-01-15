@@ -13,7 +13,6 @@ use crate::{
 };
 use axum::{
     Router,
-    http::HeaderValue,
     middleware::{from_fn, from_fn_with_state},
     routing::{any, get},
 };
@@ -30,7 +29,7 @@ use tokio::sync::broadcast;
 use tower_governor::{
     GovernorLayer, governor::GovernorConfigBuilder, key_extractor::SmartIpKeyExtractor,
 };
-use tower_http::cors::CorsLayer;
+use tower_http::cors::{Any, CorsLayer};
 use utoipa_axum::{router::OpenApiRouter, routes};
 use utoipa_scalar::{Scalar, Servable};
 use uuid::Uuid;
@@ -88,7 +87,11 @@ pub fn create_router(
         PROMETHEUS.get_or_init(PrometheusMetricLayer::pair).clone();
 
     let cors = CorsLayer::new()
-        .allow_origin("http://localhost:5173".parse::<HeaderValue>().unwrap())
+        .allow_origin([
+            "http://localhost:5173".parse().unwrap(),
+            "http://localhost:3000".parse().unwrap(),
+        ])
+        .allow_methods(Any)
         .allow_credentials(true);
 
     let public = OpenApiRouter::<AppState>::new()

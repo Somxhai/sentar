@@ -46,7 +46,6 @@ async fn main() -> Result<()> {
     let db = create_database().await?;
 
     Migrator::up(&db, None).await?;
-
     let cache = create_cache().await?;
 
     let app = create_router(db, cache, false)?;
