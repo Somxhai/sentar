@@ -1,76 +1,90 @@
 use backend::dto::section::{SectionRequest, SectionResponse, UpdateSectionRequest};
 use backend::dto::workspace::DeleteResponse;
 use eyre::Result;
-use sea_orm::{DatabaseBackend, MockDatabase, MockExecResult};
 use serde_json::json;
 use uuid::Uuid;
 
+use crate::common::{container::PgContainer, seeding::Seeding, server::create_test_server};
 mod common;
-use crate::common::helpers::mock_section;
-use crate::common::server::create_test_app;
 
 #[tokio::test]
 async fn get_section() -> Result<()> {
-    let id = Uuid::new_v4();
-    let event_id = Uuid::new_v4();
+    let user_id = "user_test";
+    let db = PgContainer::create_test_db().await?;
+    let app = create_test_server(&db, user_id).await?;
+    let seeding = Seeding(&db);
+
+    seeding.create_user(user_id.into()).await;
+    let workspace = seeding.create_workspace("ws", user_id).await;
+    let event = seeding.create_event("evt", workspace.id).await;
+
+    let section_id = Uuid::new_v4();
     let title = "Test Section";
     let price = 100.0;
 
-    let mock_data = mock_section(id, title, event_id, price);
+    seeding
+        .create_section(section_id, title, event.id, price)
+        .await;
 
-    let mock_db =
-        MockDatabase::new(DatabaseBackend::Postgres).append_query_results([[mock_data.clone()]]);
-
-    let server = create_test_app(mock_db).await?;
-
-    let response = server.get(format!("/section/{}", id).as_str()).await;
+    let response = app.get(&format!("/section/{}", section_id)).await;
 
     response.assert_status_ok();
-    response.assert_json(&SectionResponse::from(mock_data));
+    let json: SectionResponse = response.json();
+    assert_eq!(json.id, section_id);
+    assert_eq!(json.title, title);
+    assert_eq!(json.price, price);
 
     Ok(())
 }
+
 #[tokio::test]
 async fn create_section() -> Result<()> {
-    let id = Uuid::new_v4();
-    let event_id = Uuid::new_v4();
+    let user_id = "user_test";
+    let db = PgContainer::create_test_db().await?;
+    let app = create_test_server(&db, user_id).await?;
+    let seeding = Seeding(&db);
+
+    seeding.create_user(user_id.into()).await;
+    let workspace = seeding.create_workspace("ws", user_id).await;
+    let event = seeding.create_event("evt", workspace.id).await;
+
     let title = "Test Section";
     let price = 100.0;
 
-    let expected = mock_section(id, title, event_id, price);
-
-    let mock_db =
-        MockDatabase::new(DatabaseBackend::Postgres).append_query_results([[expected.clone()]]);
-
-    let server = create_test_app(mock_db).await?;
-
-    let response = server
+    let response = app
         .post("/section")
         .json(&json!(SectionRequest {
-            event_id,
+            event_id: event.id,
             title: title.to_string(),
             price,
         }))
         .await;
 
     response.assert_status_ok();
-    response.assert_json(&SectionResponse::from(expected));
+    let json: SectionResponse = response.json();
+    assert_eq!(json.title, title);
+    assert_eq!(json.event_id, event.id);
+
     Ok(())
 }
 
 #[tokio::test]
 async fn delete_section() -> Result<()> {
-    let id = Uuid::new_v4();
+    let user_id = "user_test";
+    let db = PgContainer::create_test_db().await?;
+    let app = create_test_server(&db, user_id).await?;
+    let seeding = Seeding(&db);
 
-    let mock_db =
-        MockDatabase::new(DatabaseBackend::Postgres).append_exec_results([MockExecResult {
-            rows_affected: 1,
-            last_insert_id: 0,
-        }]);
+    seeding.create_user(user_id.into()).await;
+    let workspace = seeding.create_workspace("ws", user_id).await;
+    let event = seeding.create_event("evt", workspace.id).await;
 
-    let server = create_test_app(mock_db).await?;
+    let section_id = Uuid::new_v4();
+    seeding
+        .create_section(section_id, "Delete Me", event.id, 50.0)
+        .await;
 
-    let response = server.delete(format!("/section?id={}", id).as_str()).await;
+    let response = app.delete(&format!("/section?id={}", section_id)).await;
 
     response.assert_status_ok();
     let expected = DeleteResponse { rows_affected: 1 };
@@ -80,31 +94,36 @@ async fn delete_section() -> Result<()> {
 
 #[tokio::test]
 async fn update_section() -> Result<()> {
-    let id = Uuid::new_v4();
-    let event_id = Uuid::new_v4();
-    let old_title = "Old Section";
+    let user_id = "user_test";
+    let db = PgContainer::create_test_db().await?;
+    let app = create_test_server(&db, user_id).await?;
+    let seeding = Seeding(&db);
+
+    seeding.create_user(user_id.into()).await;
+    let workspace = seeding.create_workspace("ws", user_id).await;
+    let event = seeding.create_event("evt", workspace.id).await;
+
+    let section_id = Uuid::new_v4();
+    seeding
+        .create_section(section_id, "Old Section", event.id, 50.0)
+        .await;
+
     let new_title = "Updated Section";
     let price = 50.0;
 
-    let mock_old = mock_section(id, old_title, event_id, price);
-    let mock_new = mock_section(id, new_title, event_id, price);
-
-    let mock_db = MockDatabase::new(DatabaseBackend::Postgres)
-        .append_query_results([[mock_old.clone()]])
-        .append_query_results([[mock_new.clone()]]);
-
-    let server = create_test_app(mock_db).await?;
-
-    let response = server
+    let response = app
         .put("/section")
         .json(&json!(UpdateSectionRequest {
-            id,
+            id: section_id,
             title: Some(new_title.to_string()),
             price: Some(price),
         }))
         .await;
 
     response.assert_status_ok();
-    response.assert_json(&SectionResponse::from(mock_new));
+    let json: SectionResponse = response.json();
+    assert_eq!(json.id, section_id);
+    assert_eq!(json.title, new_title);
+
     Ok(())
 }

@@ -36,6 +36,7 @@ async fn create_form(
     Json(body): Json<FormRequest>,
 ) -> Result<Response, AppError> {
     let form = form::ActiveModel {
+        id: Set(Uuid::now_v7()),
         event_id: Set(body.event_id),
         title: Set(body.title),
         description: Set(body.description),

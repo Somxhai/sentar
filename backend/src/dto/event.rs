@@ -19,7 +19,7 @@ pub struct EventRequest {
     pub settings: Option<Value>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, ToSchema)]
+#[derive(Serialize, Deserialize, PartialEq, ToSchema, Default)]
 pub struct UpdateEventRequest {
     pub id: Uuid,
     pub title: Option<String>,

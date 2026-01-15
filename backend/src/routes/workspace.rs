@@ -32,6 +32,7 @@ async fn create_workspace(
     Json(body): Json<WorkspaceRequest>,
 ) -> Result<Json<WorkspaceResponse>, AppError> {
     let workspace = workspace::ActiveModel {
+        id: Set(Uuid::now_v7()),
         name: Set(body.name),
         owner_id: Set(body.owner_id),
         ..Default::default()

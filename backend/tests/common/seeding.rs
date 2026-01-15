@@ -5,10 +5,12 @@ use backend::model::{
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection};
 use uuid::Uuid;
 
+#[allow(dead_code)]
 pub struct Seeding<'a>(pub &'a DatabaseConnection);
 
+#[allow(dead_code)]
 impl<'a> Seeding<'a> {
-    pub async fn create_user(&self, id: String) {
+    pub async fn create_user(&self, id: String) -> user::Model {
         let active_model = user::ActiveModel {
             id: Set(id),
             name: Set(format!("user_{}", Uuid::new_v4())),
@@ -19,14 +21,10 @@ impl<'a> Seeding<'a> {
         active_model
             .insert(self.0)
             .await
-            .expect("Can not create user");
+            .expect("Can not create user")
     }
 
-    pub async fn create_workspace(
-        &self,
-        name: &str,
-        owner_id: &str,
-    ) -> eyre::Result<workspace::Model> {
+    pub async fn create_workspace(&self, name: &str, owner_id: &str) -> workspace::Model {
         let active_model = workspace::ActiveModel {
             id: Set(Uuid::new_v4()),
             name: Set(name.to_string()),
@@ -34,10 +32,19 @@ impl<'a> Seeding<'a> {
             ..Default::default()
         };
 
-        Ok(active_model.insert(self.0).await?)
+        active_model
+            .insert(self.0)
+            .await
+            .expect("Can not create workspace")
     }
 
-    pub async fn create_section(&self, id: Uuid, title: &str, event_id: Uuid, price: f64) {
+    pub async fn create_section(
+        &self,
+        id: Uuid,
+        title: &str,
+        event_id: Uuid,
+        price: f64,
+    ) -> section::Model {
         let active_model = section::ActiveModel {
             id: Set(id),
             event_id: Set(event_id),
@@ -49,10 +56,10 @@ impl<'a> Seeding<'a> {
         active_model
             .insert(self.0)
             .await
-            .expect("Can not create section");
+            .expect("Can not create section")
     }
 
-    pub async fn create_event(&self, title: &str, workspace_id: Uuid) {
+    pub async fn create_event(&self, title: &str, workspace_id: Uuid) -> event::Model {
         let active_model = event::ActiveModel {
             id: Set(Uuid::new_v4()),
             workspace_id: Set(workspace_id),
@@ -63,7 +70,7 @@ impl<'a> Seeding<'a> {
         active_model
             .insert(self.0)
             .await
-            .expect("Can not create event");
+            .expect("Can not create event")
     }
 
     pub async fn create_form(
@@ -73,7 +80,7 @@ impl<'a> Seeding<'a> {
         title: &str,
         description: &str,
         user_id: &str,
-    ) {
+    ) -> form::Model {
         let active_model = form::ActiveModel {
             id: Set(id),
             event_id: Set(event_id),
@@ -87,10 +94,10 @@ impl<'a> Seeding<'a> {
         active_model
             .insert(self.0)
             .await
-            .expect("Can not create form");
+            .expect("Can not create form")
     }
 
-    pub async fn create_reservation(&self, user_id: String, event_id: Uuid) {
+    pub async fn create_reservation(&self, user_id: String, event_id: Uuid) -> reservation::Model {
         let active_model = reservation::ActiveModel {
             id: Set(Uuid::new_v4()),
             user_id: Set(user_id),
@@ -103,7 +110,7 @@ impl<'a> Seeding<'a> {
         active_model
             .insert(self.0)
             .await
-            .expect("Can not create reservation");
+            .expect("Can not create reservation")
     }
 
     pub async fn create_workspace_member(
@@ -111,7 +118,7 @@ impl<'a> Seeding<'a> {
         workspace_id: Uuid,
         user_id: String,
         invited_by: String,
-    ) {
+    ) -> workspace_member::Model {
         let active_model = workspace_member::ActiveModel {
             id: Set(Uuid::new_v4()),
             workspace_id: Set(workspace_id),
@@ -125,7 +132,7 @@ impl<'a> Seeding<'a> {
         active_model
             .insert(self.0)
             .await
-            .expect("Can not create workspace member");
+            .expect("Can not create workspace member")
     }
 
     pub async fn create_event_object(
@@ -133,7 +140,7 @@ impl<'a> Seeding<'a> {
         event_id: Uuid,
         section_id: Option<Uuid>,
         status: String,
-    ) -> Uuid {
+    ) -> event_object::Model {
         let id = Uuid::new_v4();
         let active_model = event_object::ActiveModel {
             id: Set(id),
@@ -149,12 +156,13 @@ impl<'a> Seeding<'a> {
         active_model
             .insert(self.0)
             .await
-            .expect("Can not create event object");
-
-        id
+            .expect("Can not create event object")
     }
 
-    pub async fn create_event_object_position(&self, event_object_id: Uuid) {
+    pub async fn create_event_object_position(
+        &self,
+        event_object_id: Uuid,
+    ) -> event_object_position::Model {
         let active_model = event_object_position::ActiveModel {
             id: Set(Uuid::new_v4()),
             event_object_id: Set(event_object_id),
@@ -168,6 +176,6 @@ impl<'a> Seeding<'a> {
         active_model
             .insert(self.0)
             .await
-            .expect("Can not create event object position");
+            .expect("Can not create event object position")
     }
 }
