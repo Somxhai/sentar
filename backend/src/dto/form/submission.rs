@@ -1,6 +1,6 @@
 use axum::{Json, http::StatusCode, response::IntoResponse};
 use chrono::NaiveDateTime;
-use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, TryIntoModel};
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use utoipa::ToSchema;
