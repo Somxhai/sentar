@@ -52,7 +52,7 @@ async fn create_section(
     Json(body): Json<SectionRequest>,
 ) -> Result<Json<SectionResponse>, AppError> {
     let section = section::ActiveModel {
-        id: Set(Uuid::new_v4()),
+        id: Set(Uuid::now_v7()),
         event_id: Set(body.event_id),
         title: Set(body.title),
         price: Set(body.price),

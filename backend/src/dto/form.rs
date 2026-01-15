@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 pub mod submission;
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 pub struct FormRequest {
     pub event_id: Uuid,
     pub title: Option<String>,
@@ -16,7 +16,7 @@ pub struct FormRequest {
     pub settings: Option<serde_json::Value>,
 }
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
 pub struct UpdateFormRequest {
     pub id: Uuid,
     pub title: Option<String>,

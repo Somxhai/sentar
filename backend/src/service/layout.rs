@@ -1,6 +1,5 @@
 use crate::model::event_object_position;
 use sea_orm::{ActiveValue::Set, DatabaseConnection, EntityTrait};
-// use sea_query::Expr;
 use uuid::Uuid;
 
 #[allow(dead_code)]

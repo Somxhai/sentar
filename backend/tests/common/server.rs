@@ -15,19 +15,18 @@ use backend::{
 use chrono::{Duration, Utc};
 use eyre::Result;
 use fred::prelude::KeysInterface;
-use sea_orm::MockDatabase;
+use sea_orm::DatabaseConnection;
 
-pub async fn create_test_app(mock_db: MockDatabase) -> Result<TestServer> {
+pub async fn create_test_server(db: &DatabaseConnection, user_id: &str) -> Result<TestServer> {
     dotenv::dotenv().ok();
     AppConfig::init();
-    let db = mock_db.into_connection();
     let cache = create_test_cache().await?;
 
     let fake_token = "fake-token-xxx";
     let cache_key = format!("session:{}", fake_token);
 
     let session = &SessionCache {
-        user_id: "my_user_id".to_string(),
+        user_id: user_id.to_string(), // Use the passed user_id
         expires_at: (Utc::now() + Duration::hours(1)).naive_utc(),
     };
     let session_json = serde_json::to_string(&session).unwrap();
@@ -36,7 +35,7 @@ pub async fn create_test_app(mock_db: MockDatabase) -> Result<TestServer> {
         .set(&cache_key, session_json, None, None, false)
         .await?;
 
-    let app = create_router(db, cache, true)?;
+    let app = create_router(db.clone(), cache, true)?;
 
     let app_with_mock_ip = app.layer(middleware::from_fn(
         |mut req: Request, next: Next| async move {

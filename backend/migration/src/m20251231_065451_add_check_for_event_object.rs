@@ -1,4 +1,4 @@
-use sea_orm_migration::{prelude::*, schema::*, sea_orm::Statement};
+use sea_orm_migration::{prelude::*, schema::*};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -23,10 +23,7 @@ impl MigrationTrait for Migration {
 
         // We assume PostgreSQL based on the error.
         // If using MySQL, the syntax is slightly different (DROP CHECK vs DROP CONSTRAINT).
-        db.execute_raw(Statement::from_string(
-            db.get_database_backend(),
-            r#"ALTER TABLE "event_object" ADD CONSTRAINT "chk_status_valid" CHECK ("status" IN ('available', 'reserved'))"#,
-        )).await?;
+        db.execute_unprepared(r#"ALTER TABLE "event_object" ADD CONSTRAINT "chk_status_valid" CHECK ("status" IN ('available', 'reserved'))"#).await?;
 
         Ok(())
     }
@@ -35,11 +32,8 @@ impl MigrationTrait for Migration {
         let db = manager.get_connection();
 
         // 1. Drop the constraint
-        db.execute_raw(Statement::from_string(
-            db.get_database_backend(),
-            r#"ALTER TABLE "event_object" DROP CONSTRAINT "chk_status_valid""#,
-        ))
-        .await?;
+        db.execute_unprepared(r#"ALTER TABLE "event_object" DROP CONSTRAINT "chk_status_valid""#)
+            .await?;
 
         // 2. Revert column definition (if needed)
         manager

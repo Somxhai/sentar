@@ -1,12 +1,12 @@
 use axum::{Json, http::StatusCode, response::IntoResponse};
 use chrono::NaiveDateTime;
-use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, TryIntoModel};
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::{dto::connection_info::ConnectionInfo, model::form_submission};
+use crate::{dto::connection_info::ConnectionInfo, error::AppError, model::form_submission};
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, PartialEq)]
 pub struct FormSubmit {
@@ -25,8 +25,9 @@ impl FormSubmit {
         user_id: String,
         form_id: Uuid,
         connect_info: ConnectionInfo,
-    ) -> eyre::Result<form_submission::Model> {
+    ) -> Result<form_submission::Model, AppError> {
         let status = if self.is_draft { "draft" } else { "submitted" };
+
         let mut submission = form_submission::ActiveModel {
             answer: Set(self.answers),
             respondent_id: Set(user_id),
@@ -34,17 +35,20 @@ impl FormSubmit {
             form_id: Set(form_id),
             user_agent: Set(Some(connect_info.user_agent.to_string())),
             ip_address: Set(Some(connect_info.ip.to_string())),
+            submitted_at: Set(chrono::Utc::now().naive_utc()),
+            updated_at: Set(chrono::Utc::now().naive_utc()),
             ..Default::default()
         };
 
-        // Update if id is specified.
-        if let Some(submission_id) = self.submission_id {
+        let model = if let Some(submission_id) = self.submission_id {
             submission.id = Set(submission_id);
-        }
+            submission.update(db).await?
+        } else {
+            submission.id = Set(Uuid::now_v7());
+            submission.insert(db).await?
+        };
 
-        let submission = submission.save(db).await?;
-
-        Ok(submission.try_into_model()?)
+        Ok(model)
     }
 }
 

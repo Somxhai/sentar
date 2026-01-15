@@ -85,7 +85,7 @@ services:
       - "4318:4318"   # OTLP HTTP
     networks:
       - app
-    depends:
+    depends_on:
       - prometheus
 
 volumes:

@@ -49,7 +49,7 @@ async fn create_event(
     Json(body): Json<EventRequest>,
 ) -> Result<Json<EventResponse>, AppError> {
     let event = event::ActiveModel {
-        id: Set(Uuid::new_v4()),
+        id: Set(Uuid::now_v7()),
         title: Set(body.title),
         workspace_id: Set(body.workspace_id),
         description: Set(body.description),
@@ -59,6 +59,7 @@ async fn create_event(
         ..Default::default()
     };
     let event = event.insert(&*app_state.db).await?;
+    // .map_err(|_| AppError::Internal)?;
     Ok(Json(EventResponse::from(event)))
 }
 
