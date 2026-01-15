@@ -91,7 +91,6 @@ pub fn create_router(
             "http://localhost:5173".parse().unwrap(),
             "http://localhost:3000".parse().unwrap(),
         ])
-        .allow_methods(Any)
         .allow_credentials(true);
 
     let public = OpenApiRouter::<AppState>::new()
